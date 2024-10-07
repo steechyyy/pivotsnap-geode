@@ -10,5 +10,13 @@
 	"name": "Pivot Snap",
 	"version": "v1.0.0",
 	"developer": "steechy",
-	"description": "allows easy snapping when warping objects"
+	"description": "allows easy snapping when warping objects",
+
+	"dependencies": [
+		{
+			"id": "geode.custom-keybinds",
+			"version": ">=v1.1.0"
+		}
+	]
+
 }

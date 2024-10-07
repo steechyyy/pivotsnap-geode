@@ -2,10 +2,13 @@
  * Include the Geode headers.
  */
 #include <Geode/Geode.hpp>
+#include <geode.custom-keybinds/include/Keybinds.hpp>
+
  /**
   * Brings cocos2d and all Geode namespaces to the current scope.
   */
 using namespace geode::prelude;
+using namespace keybinds;
 
 /**
  * `$modify` lets you extend and modify GD's classes.
@@ -29,17 +32,43 @@ using namespace geode::prelude;
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
 
+$execute {
+	BindManager::get()->registerBindable({
+		"pivot_snap"_spr,
+		"Move",
+		"",
+		{ Keybind::create(KEY_X, Modifier::None) },
+		"Pivot Snap/Keybinds"
+	});
+}
 
 class $modify(TheTransformCtrls, GJTransformControl) {
 
-	virtual bool ccTouchBegan(CCTouch * p0, CCEvent * p1) {
-		auto ret = GJTransformControl::ccTouchBegan(p0, p1);
+	virtual bool init() {
+		GJTransformControl::init();
 
-		log::debug("CCTouch: {}", p0);
+		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+			if (event->isDown()) {
 
-		return ret;
-	};
+				CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+				CCNode* layer = pivotNode->getParent();	
 
+				if (!layer->isVisible()) {
+					return ListenerResult::Propagate;
+				}
+
+				CCPoint newPos = layer->convertToNodeSpace(getMousePos());
+
+				pivotNode->setPosition(newPos);
+				GJTransformControl::refreshControl();
+
+			}
+
+			return ListenerResult::Propagate;
+		}, "pivot_snap"_spr);
+
+	}
+	
 
 };
 
@@ -73,20 +102,8 @@ class $modify(TheEditor, LevelEditorLayer) {
 			return false;
 		}
 
-		log::debug("LevelEditorLayer loaded lol");
-
-
 		auto mainNode = this->getChildByID("main-node");
 		auto batchLayer = mainNode->getChildByID("batch-layer");
-		int children = batchLayer->getChildrenCount();
-
-		log::debug("Children count: {}", children);
-
-		auto GjTransformControl = batchLayer->getChildByIDRecursive("GjTransformControl");
-
-		if (GjTransformControl == nullptr) {
-			log::debug("Sad");
-		}
 
 		return true;
 	}
