@@ -1,0 +1,14 @@
+{
+	"geode": "3.8.1",
+	"gd": {
+		"win": "2.206",
+		"android": "2.206",
+		"mac": "2.206",
+		"ios": "2.206"
+	},
+	"id": "steechy.pivot_snap",
+	"name": "Pivot Snap",
+	"version": "v1.0.0",
+	"developer": "steechy",
+	"description": "allows easy snapping when warping objects"
+}
