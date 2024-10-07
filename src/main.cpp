@@ -51,23 +51,64 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			if (event->isDown()) {
 
 				CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-				CCNode* layer = pivotNode->getParent();	
+				CCNode* parentLayer = m_mainNodeParent;
 
-				if (!layer->isVisible()) {
+				if (!parentLayer->isVisible()) {
 					return ListenerResult::Propagate;
 				}
 
-				CCPoint newPos = layer->convertToNodeSpace(getMousePos());
+				CCArray* snapTargets = m_warpSprites;
+				CCRect boundingBox = pivotNode->boundingBox();
+				CCObject* obj;
 
-				pivotNode->setPosition(newPos);
+				CCARRAY_FOREACH(snapTargets, obj) {
+					CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
+
+					if (warpSprite && warpSprite != pivotNode && warpSprite->getTag() <= 9 && boundingBox.intersectsRect(warpSprite->boundingBox())) {
+						log::debug("Hello {}", warpSprite->getTag());
+					}
+				}
+
+
 				GJTransformControl::refreshControl();
 
 			}
 
 			return ListenerResult::Propagate;
-		}, "pivot_snap"_spr);
+			}, "pivot_snap"_spr);
 
 	}
+
+
+	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
+		GJTransformControl::ccTouchEnded(p0, p1);
+
+		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+		CCNode* parentLayer = m_mainNodeParent;
+
+		if (!parentLayer->isVisible()) {
+			return;
+		}
+
+
+		CCArray* snapTargets = m_warpSprites;
+		CCRect boundingBox = pivotNode->boundingBox();
+		CCObject* obj;
+
+		CCARRAY_FOREACH(snapTargets, obj) {
+			CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
+
+			if (warpSprite && warpSprite != pivotNode && warpSprite->getTag() <= 9 && boundingBox.intersectsRect(warpSprite->boundingBox())) {
+				log::debug("Hello {}", warpSprite->getTag());
+				pivotNode->setPosition(warpSprite->getPosition());
+			}
+		}
+
+
+		GJTransformControl::refreshControl();
+
+	}
+
 	
 
 };
