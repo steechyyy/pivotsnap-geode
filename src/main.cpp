@@ -32,11 +32,12 @@ using namespace keybinds;
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
 
+
 $execute {
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
-		"Move",
-		"",
+		"Snap",
+		"the key that'll be used to snap the pivot\n(only works with \"keybind\" snap mode)",
 		{ Keybind::create(KEY_X, Modifier::None) },
 		"Pivot Snap/Keybinds"
 	});
@@ -44,44 +45,11 @@ $execute {
 
 class $modify(TheTransformCtrls, GJTransformControl) {
 
-	virtual bool init() {
-		GJTransformControl::init();
+	struct Fields {
+		std::string method;
+	};
 
-		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
-			if (event->isDown()) {
-
-				CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-				CCNode* parentLayer = m_mainNodeParent;
-
-				if (!parentLayer->isVisible()) {
-					return ListenerResult::Propagate;
-				}
-
-				CCArray* snapTargets = m_warpSprites;
-				CCRect boundingBox = pivotNode->boundingBox();
-				CCObject* obj;
-
-				CCARRAY_FOREACH(snapTargets, obj) {
-					CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
-
-					if (warpSprite && warpSprite != pivotNode && warpSprite->getTag() <= 9 && boundingBox.intersectsRect(warpSprite->boundingBox())) {
-						log::debug("Hello {}", warpSprite->getTag());
-					}
-				}
-
-
-				GJTransformControl::refreshControl();
-
-			}
-
-			return ListenerResult::Propagate;
-			}, "pivot_snap"_spr);
-
-	}
-
-
-	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
-		GJTransformControl::ccTouchEnded(p0, p1);
+	void performSnapTest() {
 
 		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
 		CCNode* parentLayer = m_mainNodeParent;
@@ -99,79 +67,76 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
 
 			if (warpSprite && warpSprite != pivotNode && warpSprite->getTag() <= 9 && boundingBox.intersectsRect(warpSprite->boundingBox())) {
-				log::debug("Hello {}", warpSprite->getTag());
-				pivotNode->setPosition(warpSprite->getPosition());
+				
+				CCPoint res = warpSprite->getParent()->convertToWorldSpace(warpSprite->getPosition());
+				
+				pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(res));
+				log::debug("Mandatory string, {}", res);
+				
 			}
 		}
 
-
+		log::debug("Mandatory string 2, {}", pivotNode->convertToWorldSpace({ 0, 0 }));
 		GJTransformControl::refreshControl();
+	};
 
+	virtual bool init() {
+
+		GJTransformControl::init();
+		m_fields->method = Mod::get()->getSettingValue<std::string>("snap-mode");
+
+		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
+
+			if (event->isDown() && m_fields->method == "keybind") {
+				performSnapTest();
+			}
+
+			return ListenerResult::Propagate;
+			}, "pivot_snap"_spr);
 	}
 
-	
+	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
+		GJTransformControl::ccTouchEnded(p0, p1);
 
-};
-
-
-/*
-class $modify(MyMenuLayer, MenuLayer) {
-	bool init() {
-		if (!MenuLayer::init())
-			return false;
-
-		auto winSize = CCDirector::get()->getWinSize();
-
-		auto label = cocos2d::CCLabelBMFont::create("Hello world", "bigFont.fnt");
-		label->setPosition(winSize / 2);
-		this->addChild(label);
-
-		log::debug("hi");
-
-
-
-		return true;
-	}
-
-
-};
-*/
-
-class $modify(TheEditor, LevelEditorLayer) {
-	bool init(GJGameLevel * p0, bool p1) {
-		if (!LevelEditorLayer::init(p0, p1)) {
-			return false;
+		if (m_fields->method == "snapOnRelease") {
+			performSnapTest();
 		}
 
-		auto mainNode = this->getChildByID("main-node");
-		auto batchLayer = mainNode->getChildByID("batch-layer");
+	};
 
-		return true;
-	}
+	virtual void ccTouchMoved(CCTouch* p0, CCEvent* p1) {
+
+		if (Mod::get()->getSettingValue<bool>("limit-size")) {
+
+			CCArray* warpSprites = m_warpSprites;
+
+			CCObject* obj;
+			const float maxWarp = 15000;
+
+
+			CCARRAY_FOREACH(warpSprites, obj) {
+				CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
+
+				if (warpSprite) {
+					CCPoint pos = warpSprite->getPosition();
+
+					if (pos.y > maxWarp || pos.x > maxWarp) {
+						return;
+					}
+
+				};
+			}
+
+		}
+
+		GJTransformControl::ccTouchMoved(p0, p1);
+		if (m_fields->method == "realtime") {
+			performSnapTest();
+		}
+
+
+	};
+
 };
 
-class $modify(TheEditorUI, EditorUI) {
-
-	static void onModify(auto & self) {
-		(void)self.setHookPriority("EditorUI::transformObjectCall", INT_MIN);
-	}
-
-	void sliderChanged(cocos2d::CCObject * p0) {
-		EditorUI::sliderChanged(p0);
-
-		log::debug("Slider");
-	}
-
-	void activateTransformControl(cocos2d::CCObject * p0) {
-		EditorUI::activateTransformControl(p0);
-
-		log::debug("toggled transform Ctrl.");
-	}
-
-	void transformObjectCall(EditCommand command) {
-		EditorUI::transformObjectCall(command);
-
-		log::debug("transformObjectCall");
-	}
-
-};
+// todo :  Fix vector too long error

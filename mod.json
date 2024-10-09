@@ -12,11 +12,39 @@
 	"developer": "steechy",
 	"description": "allows easy snapping when warping objects",
 
+	"settings": {
+
+		"title": {
+			"type": "title",
+			"name": "Pivot Snap Settings"
+		},
+
+		"snap-mode": {
+			"name": "Snap mode",
+			"description": "change the snapping behavior of the pivot point to your liking !!",
+			"type": "string",
+			"default": "snapOnRelease",
+			"one-of": [ "snapOnRelease", "realtime", "keybind" ]
+		},
+
+		"limit-size": {
+			"type": "bool",
+			"name": "Limit warp size",
+			"description": "limits the size to which you can warp your objects to around 1.000 blocks., reduces the chance of a crash occuring",
+			"default": true
+		}
+
+	},
+
 	"dependencies": [
 		{
 			"id": "geode.custom-keybinds",
 			"version": ">=v1.1.0"
 		}
-	]
+	],
+
+	"links": {
+		"source": "https://github.com/steechyyy/pivotsnap-geode"
+	}
 
 }
