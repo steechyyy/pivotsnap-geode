@@ -6,5 +6,7 @@ simple editor qol mod to enhance the quality of lives by allowing ppl to snap th
 
 this is my first ever mod so i hope u liked, dont forget to subscribe and hit that bell
 
+## How to use
+On desktop, the default keybind to change the snap mode is X, you can change that in the custom keybinds settings.
 
-*ahem.. excuse the terrible source code. it works though that's what matters right*
+*errr.. excuse the terrible & messy source code. it works though that's what matters right*

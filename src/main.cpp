@@ -28,7 +28,8 @@ using namespace keybinds;
  */
 
 #include <Geode/modify/GJTransformControl.hpp>
-
+#include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/EditorUI.hpp>
 
 $execute {
 	BindManager::get()->registerBindable({
@@ -42,84 +43,90 @@ $execute {
 
 class $modify(TheTransformCtrls, GJTransformControl) {
 
-	static void onModify(auto & self) {
-		(void) self.setHookPriority("GJTransformControl::init", -3000000);
-		(void) self.setHookPriority("GJTransformControl::ccTouchEnded", -3000000);
-		(void) self.setHookPriority("GJTransformControl::ccTouchMoved", -3000000);
-	}
-
 	struct Fields {
 
-		std::string method;
 		CCSprite* snappedTo = nullptr;
 		CCArray* disabledWarps;
-		CCArray* validWarpSprites;
+		CCArray* warpSprites;
 
 		Fields()
-			: disabledWarps(CCArray::create()), validWarpSprites(CCArray::create()) {
+			: disabledWarps(CCArray::create()), warpSprites(CCArray::create()) {
 			disabledWarps->retain();
-			validWarpSprites->retain();
+			warpSprites->retain();
 		}
 
 		~Fields() {
 			disabledWarps->release();
-			validWarpSprites->release();
+			warpSprites->release();
 		}
 
 	};
 
 	void updateValidSprites() {
-		if (m_fields->validWarpSprites->count() > 0) {
-			m_fields->validWarpSprites->removeAllObjects();
+		if (m_fields->warpSprites->count() > 0) {
+			m_fields->warpSprites->removeAllObjects();
 		}
-		
-		CCObject* mWarpSprite;
-		CCARRAY_FOREACH(m_warpSprites, mWarpSprite) {
-			CCSprite* castedWarpSprite = dynamic_cast<CCSprite*>(mWarpSprite);
 
-			if (castedWarpSprite->getContentHeight() == castedWarpSprite->getContentWidth()) {
-				m_fields->validWarpSprites->addObject(castedWarpSprite);
+		// Getting the frame name "warpBtn_02_001.png" cuz that's the buttons we need. Thanks DevTools
+		const std::string textureNomenclature = "warpBtn_02_001.png";
+
+		auto* cachedFrames = CCSpriteFrameCache::sharedSpriteFrameCache()->m_pSpriteFrames;
+		std::unordered_map<std::string, CCSpriteFrame*> frameMap;
+
+		for (const auto& pair : CCDictionaryExt<std::string, CCSpriteFrame*>(cachedFrames)) {
+			const std::string& key = pair.first;
+			CCSpriteFrame* frame = pair.second;
+
+			if (key == textureNomenclature) {
+				frameMap[key] = frame;
 			}
-
 		}
 
-	}
 
-	void printDisabledWarps() {
 		CCObject* obj;
+		CCARRAY_FOREACH(m_mainNodeParent->getChildren(), obj) {
 
-		CCARRAY_FOREACH(m_fields->disabledWarps, obj) {
-			CCSprite* castedObj = dynamic_cast<CCSprite*>(obj);
-			log::debug("{} is disabled", castedObj->getTag());
+			if (auto spriteNode = typeinfo_cast<CCSprite*>(obj)) {
+				auto rect = spriteNode->getTextureRect();
+
+				auto it = frameMap.find(textureNomenclature);
+				if (it != frameMap.end() && it->second->getRect() == rect) {
+					m_fields->warpSprites->addObject(obj);
+				}
+			}
+
 		}
+
+		// 2024-12-05 4:40:30PM "yay"
 
 	}
 
-	void enableAll() {
+	void enableWarpers() {
 
-		CCObject* warp;
+		//Disable the disabled. I hope that makes sense :D
+		CCObject* warpers;
 		if (m_fields->disabledWarps->count() > 0) {
-
-			CCARRAY_FOREACH(m_fields->validWarpSprites, warp) {
-				CCSprite* objWarpSprite = dynamic_cast<CCSprite*>(warp);
-				objWarpSprite->setColor({ 255, 255, 255 });
+			CCARRAY_FOREACH(m_fields->warpSprites, warpers) {
+				CCSprite* warperSprite = typeinfo_cast<CCSprite*>(warpers);
+				warperSprite->setColor({ 255, 255, 255 });
 			}
-
 
 			m_fields->disabledWarps->removeAllObjects();
 		}
 
 	}
 
-	void updateDisabledWarps(CCSprite* warpSprite) {
-		updateValidSprites();
+	void updateDisabledWarps() { 
 
-		enableAll();
-		
-		CCObject* obj2;
-		CCObject* obj;
+		enableWarpers();
+
+		if (m_fields->snappedTo == nullptr) {
+			return;
+		}
 
 		ccColor3B disabledclr = { 140, 90, 90 };
+
+		CCSprite* warpSprite = m_fields->snappedTo;
 
 		float yPos = warpSprite->getPositionY();
 		float xPos = warpSprite->getPositionX();
@@ -127,41 +134,40 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		int xCount = 0;
 		int yCount = 0;
 
+		CCArray* axisAlignedSprites = CCArray::create(); // Contains all sprites that align on either the x or y axis
+		axisAlignedSprites->retain();
 
-		CCARRAY_FOREACH(m_fields->validWarpSprites, obj) {
-			CCSprite* objWarpSprite = dynamic_cast<CCSprite*>(obj);
+		CCObject* warpSpriteObj;
+		CCARRAY_FOREACH(m_fields->warpSprites, warpSpriteObj) {
+			CCSprite* CCwarpSprite = typeinfo_cast<CCSprite*>(warpSpriteObj);
 
+			if (CCwarpSprite && !m_fields->disabledWarps->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
 
-			if (objWarpSprite && !m_fields->disabledWarps->containsObject(objWarpSprite) && objWarpSprite != warpSprite) {
+				if (CCwarpSprite->getPositionX() == xPos) {
 
-				if (objWarpSprite->getPositionX() == xPos) {
-
-					m_fields->disabledWarps->addObject(objWarpSprite);
+					axisAlignedSprites->addObject(CCwarpSprite);
 					xCount++;
 				}
 
-				if (objWarpSprite->getPositionY() == yPos) {
+				if (CCwarpSprite->getPositionY() == yPos) {
 
-					m_fields->disabledWarps->addObject(objWarpSprite);
+					axisAlignedSprites->addObject(CCwarpSprite);
 					yCount++;
 
 				}
 
 			};
-
-			// log::debug("yCount is {}", yCount);
 		}
 
-		
-
-		if (m_fields->disabledWarps->count() != 4) { //If it's not a corner
+		if (axisAlignedSprites->count() != 4) { //If it's not a corner
 
 			if (yCount > xCount) { //if there were more horizontal positions found than vertical ones, it must be a horizontal row
+				
 
 				m_fields->disabledWarps->removeAllObjects();
 				CCObject* rowObject;
-				CCARRAY_FOREACH(m_fields->validWarpSprites, rowObject) {
-					CCSprite* rowObj = dynamic_cast<CCSprite*>(rowObject);
+				CCARRAY_FOREACH(m_fields->warpSprites, rowObject) {
+					CCSprite* rowObj = typeinfo_cast<CCSprite*>(rowObject);
 
 					if (rowObj->getPositionY() == yPos && rowObj != warpSprite) {
 						m_fields->disabledWarps->addObject(rowObj);
@@ -169,12 +175,13 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 				}
 
 			}
-			else if (xCount > yCount) { // if there were more vertical positions found, must be a horizontal row then, right?
+			else if (xCount > yCount) { // if there were more vertical positions found, must be a vertical row then, right?
+				
 
 				m_fields->disabledWarps->removeAllObjects();
 				CCObject* columnObject;
-				CCARRAY_FOREACH(m_fields->validWarpSprites, columnObject) {
-					CCSprite* columnObj = dynamic_cast<CCSprite*>(columnObject);
+				CCARRAY_FOREACH(m_fields->warpSprites, columnObject) {
+					CCSprite* columnObj = typeinfo_cast<CCSprite*>(columnObject);
 
 					if (columnObj->getPositionX() == xPos && columnObj != warpSprite) {
 						m_fields->disabledWarps->addObject(columnObj);
@@ -184,176 +191,195 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			}
 
 		}
+		else {
 
-		printDisabledWarps();
+			CCObject* axisObj;
+			CCARRAY_FOREACH(axisAlignedSprites, axisObj) {
+				CCSprite* axisObject = typeinfo_cast<CCSprite*>(axisObj);
+				m_fields->disabledWarps->addObject(axisObject);
+			}
 
-		//apply colorrs!!
+		}
+
+		// applying colors because visual stuff gives me dopamine
 		CCObject* warp;
 		CCARRAY_FOREACH(m_fields->disabledWarps, warp) {
-			CCSprite* warpObj = dynamic_cast<CCSprite*>(warp);
-			warpObj->setColor(disabledclr);
+			CCSprite* warpObject = typeinfo_cast<CCSprite*>(warp);
+			warpObject->setColor(disabledclr);
 		}
+		// It's as shrimple as that!!!
 
+
+		axisAlignedSprites->release(); // memory not leaking anymor
 	};
 
-	void performSnapTest(bool isTouchMoved) {
+	std::pair<bool, CCSprite*> snap(bool test) {
 
-		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-		CCNode* parentLayer = m_mainNodeParent;
+		if (test) { // Testing mode: Returns if the pivot WOULD snap or not. Im repeating lots of code but i dont wanna make a separate function for this
+			updateValidSprites();
 
-		if (!parentLayer->isVisible()) {
-			return;
-		}
-
-
-		CCArray* snapTargets = m_fields->validWarpSprites;
-		CCRect boundingBox = pivotNode->boundingBox();
-		CCObject* obj;
-		int foundObjs = 0;
-
-		CCARRAY_FOREACH(snapTargets, obj) {
-			CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
-
-			if (warpSprite && warpSprite != pivotNode && boundingBox.intersectsRect(warpSprite->boundingBox())) {
-				
-				CCPoint res = warpSprite->getParent()->convertToWorldSpace(warpSprite->getPosition());
-				
-				pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(res));
-				m_fields->snappedTo = warpSprite;
-
-				if (isTouchMoved == false) {
-					updateDisabledWarps(warpSprite);
-				}
-				foundObjs++;
-
-				break;
+			if (!m_mainNodeParent->isVisible()) {
+				return std::make_pair(false, nullptr);
 			}
-		}
 
-		if (foundObjs == 0) {
-			m_fields->snappedTo = nullptr;
-			enableAll();
-		}
+			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+			CCArray* targets = m_fields->warpSprites;
+			CCRect pivotBox = pivotNode->boundingBox();
 
-		GJTransformControl::refreshControl();
+			int foundObjs = 0;
+
+			CCObject* obj;
+			CCSprite* result;
+			CCARRAY_FOREACH(targets, obj) {
+				CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj);
+
+				if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
+					result = warpSprite;
+					foundObjs++;
+
+					break;
+				}
+			}
+
+
+			if (foundObjs == 0) {
+				log::debug("Test! No snap.");
+				return std::make_pair(false, nullptr);
+			}
+			else {
+				log::debug("Test! Would snap.");
+				return std::make_pair(true, result);
+			}
+
+		}
+		else {
+			updateValidSprites();
+
+			if (!m_mainNodeParent->isVisible()) {
+				return std::make_pair(false, nullptr);
+			}
+
+			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+			CCArray* targets = m_fields->warpSprites;
+			CCRect pivotBox = pivotNode->boundingBox();
+
+			int foundObjs = 0;
+
+			pivotNode->setColor({ 0,255,0 });
+
+			CCObject* obj;
+			CCARRAY_FOREACH(targets, obj) {
+				CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj);
+
+				if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
+					CCPoint result = warpSprite->getParent()->convertToWorldSpace(warpSprite->getPosition());
+
+					pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(result));
+					m_fields->snappedTo = warpSprite;
+
+					foundObjs++;
+
+					break;
+				}
+			}
+
+			if (foundObjs == 0) {
+				m_fields->snappedTo = nullptr;
+				enableWarpers();
+				log::debug("No objects to snap to found");
+			}
+
+
+			GJTransformControl::refreshControl();
+			updateDisabledWarps();
+		}
+		
 	};
 
+
+	//Now im hooking le functionas.
 	virtual bool init() {
+		enableWarpers();
 
 		GJTransformControl::init();
-		m_fields->method = Mod::get()->getSettingValue<std::string>("snap-mode");
-
+		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
 		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
 
-			if (event->isDown() && m_fields->method == "keybind") {
-				performSnapTest(false);
+			if (event->isDown() && method == "keybind") {
+				snap(false);
+				log::debug("Attempted to snap.");
 			}
 
 			return ListenerResult::Propagate;
 			}, "pivot_snap"_spr);
 
+		return true;
+	}
+
+
+	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
+		auto snapRes = snap(true);
+
+		if (!snapRes.first || snapRes.first && m_fields->warpSprites->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
+			enableWarpers();
+		}
+
+		GJTransformControl::ccTouchEnded(p0, p1);
 	}
 
 	virtual bool ccTouchBegan(CCTouch* p0, CCEvent* p1) {
+		CCPoint location = p0->getStartLocation();
 		
-		CCPoint touch = p0->getLocation();
-		log::debug("mandatory string, {}", touch);
-		CCObject* obj;
-		CCObject* warp;
 
-		updateValidSprites();
+		if (m_fields->disabledWarps->count() > 0) {
+			
 
-		CCARRAY_FOREACH(m_fields->validWarpSprites, obj) {
-			CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
+			CCObject* disabledWarper;
+			CCARRAY_FOREACH(m_fields->disabledWarps, disabledWarper) {
+				
+				CCSprite* warper = typeinfo_cast<CCSprite*>(disabledWarper);
+				if (!warper) continue;
 
-			if (warpSprite) {
-
-				CCPoint pos = warpSprite->getParent()->convertToWorldSpace(warpSprite->getPosition());
-				CCSize size = warpSprite->getScaledContentSize();
-
-				CCRect boundingBox = CCRect(
-					pos.x - (size.width * 1.5) / 2,
-					pos.y - (size.height * 1.5) / 2,
-					size.width * 1.5,
-					size.height * 1.5
+				float deadzoneWidth = warper->getContentWidth() * 1.1;
+				float deadzoneHeight = warper->getContentHeight() * 1.1;
+				
+				CCPoint worldPos = warper->getParent()->convertToWorldSpace(warper->getPosition());
+				CCRect bounderBox = CCRect(
+					worldPos.x - deadzoneWidth / 2,
+					worldPos.y - deadzoneHeight / 2,
+					deadzoneWidth,
+					deadzoneHeight
 				);
 
-				if (boundingBox.containsPoint(touch)) {
-					log::debug("disabledObjects {}", m_fields->disabledWarps);
-					
-					CCARRAY_FOREACH(m_fields->disabledWarps, warp) {
-						log::debug("disabledObject, {}", warp->getTag());
-						if (warp->getTag() == warpSprite->getTag()) {
-							log::debug("denied point {}", warpSprite->getTag());
-							return false;
-						}
-					}
+				log::debug("Width: {}, Height: {}", warper->getContentWidth(), warper->getContentHeight());
 
+				if (bounderBox.containsPoint(location)) {
+					log::debug("Touched forbidden point");
+					return true;
 				}
 
 			}
-
 		}
 
 
-		GJTransformControl::ccTouchBegan(p0, p1);
+		return GJTransformControl::ccTouchBegan(p0, p1);
 	}
-
-	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
-		GJTransformControl::ccTouchEnded(p0, p1);
-
-		if (m_fields->method == "snapOnRelease") {
-			performSnapTest(false);
-		}
-		else
-		{
-			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-			CCNode* parentLayer = m_mainNodeParent;
-
-			if (!parentLayer->isVisible()) {
-				return;
-			}
-
-
-			CCArray* snapTargets = m_fields->validWarpSprites;
-			CCRect boundingBox = pivotNode->boundingBox();
-
-			CCObject* obje;
-
-			CCARRAY_FOREACH(snapTargets, obje) {
-				CCSprite* obj = dynamic_cast<CCSprite*>(obje);
-
-				if (!boundingBox.intersectsRect(obj->boundingBox())) {
-					enableAll();
-				}
-			}
-
-
-		}
-
-	};
-	
-	/*
-	virtual void ccTouchMoved(CCTouch* p0, CCEvent* p1) {
-
-		if (m_fields->method == "realtime") {
-			performSnapTest(true);
-		}
-
-		if (m_fields->lastSnapped != m_fields->snappedTo) {
-
-			updateDisabledWarps(m_fields->snappedTo);
-			m_fields->lastSnapped = m_fields->snappedTo;
-
-		}
-
-		GJTransformControl::ccTouchMoved(p0, p1);
-
-	};
-	
-	*/
 
 };
 
-// todo :  Fix vector too long error
+class $modify(TheEditorUI, EditorUI) {
+
+	void onToggle() {
+		static_cast<TheTransformCtrls*>(m_transformControl)->enableWarpers();
+	}
+	
+	void activateTransformControl(CCObject* p0) {
+		log::debug("Print");
+		onToggle();
+		EditorUI::activateTransformControl(p0);
+	}
+
+};
+
+//TODO: Den lustigen Vector too long bug fixen.
