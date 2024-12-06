@@ -31,6 +31,7 @@ using namespace keybinds;
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/EditorUI.hpp>
 
+#ifdef GEODE_IS_WINDOWS
 $execute {
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
@@ -380,4 +381,4 @@ class $modify(TheEditorUI, EditorUI) {
 
 };
 
-//TODO: Den lustigen Vector too long bug fixen.
+#endif
