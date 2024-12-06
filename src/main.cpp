@@ -387,5 +387,3 @@ class $modify(TheEditorUI, EditorUI) {
 	}
 
 };
-
-#endif
