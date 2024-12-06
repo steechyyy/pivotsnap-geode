@@ -2,13 +2,17 @@
  * Include the Geode headers.
  */
 #include <Geode/Geode.hpp>
+#ifdef GEODE_IS_WINDOWS
 #include <geode.custom-keybinds/include/Keybinds.hpp>
+#endif
 
  /**
   * Brings cocos2d and all Geode namespaces to the current scope.
   */
 using namespace geode::prelude;
+#ifdef GEODE_IS_WINDOWS
 using namespace keybinds;
+#endif
 
 /**
  * `$modify` lets you extend and modify GD's classes.
@@ -41,6 +45,7 @@ $execute {
 		"Pivot Snap/Keybinds"
 	});
 }
+#endif
 
 class $modify(TheTransformCtrls, GJTransformControl) {
 
@@ -304,6 +309,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
+		#ifdef GEODE_IS_WINDOWS
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
 			if (event->isDown() && method == "keybind") {
 				snap(false);
@@ -312,6 +318,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			return ListenerResult::Propagate;
 			}, "pivot_snap"_spr);
+		#endif
 
 		return true;
 	}
@@ -380,5 +387,3 @@ class $modify(TheEditorUI, EditorUI) {
 	}
 
 };
-
-#endif
