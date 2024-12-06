@@ -265,8 +265,6 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			int foundObjs = 0;
 
-			pivotNode->setColor({ 0,255,0 });
-
 			CCObject* obj;
 			CCARRAY_FOREACH(targets, obj) {
 				CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj);
@@ -292,6 +290,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			GJTransformControl::refreshControl();
 			updateDisabledWarps();
+			return std::make_pair(false, nullptr);
 		}
 		
 	};
@@ -304,8 +303,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
-		this->template addEventListener<InvokeBindFilter>([=](InvokeBindEvent* event) {
-
+		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
 			if (event->isDown() && method == "keybind") {
 				snap(false);
 				log::debug("Attempted to snap.");
