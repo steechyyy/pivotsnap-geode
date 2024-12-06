@@ -1,10 +1,7 @@
 {
 	"geode": "4.0.0",
 	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
+		"win": "2.2074"
 	},
 	"id": "steechy.pivot_snap",
 	"name": "Pivot Snap",
@@ -21,10 +18,10 @@
 
 		"snap-mode": {
 			"name": "Snap mode",
-			"description": "change the snapping behavior of the pivot point to your liking !!",
+			"description": "change the snapping behavior of the pivot point to your liking (Currently only keybind but will add more)",
 			"type": "string",
-			"default": "snapOnRelease",
-			"one-of": [ "snapOnRelease", "keybind" ]
+			"default": "keybind",
+			"one-of": [ "keybind" ]
 		}
 
 	},
@@ -38,6 +35,8 @@
 
 	"links": {
 		"source": "https://github.com/steechyyy/pivotsnap-geode"
-	}
+	},
+
+	"tags": [ "editor", "utility", "enhancement", "modtober24" ]
 
 }
