@@ -15,3 +15,5 @@ On desktop, the default keybind to change the snap mode is X, you can change tha
 On mac, use the snap button on the left.
 
 If you encounter any issues ping me (@steechy) in the [geode sdk discord](discord.gg/geode) and i'll try to fix it
+
+###### thx hiimjustin000 for helping with adding mac support
