@@ -369,10 +369,12 @@ class $modify(TheEditorUI, EditorUI) {
 		caster->enableWarpers();
 	}
 
+	/*
 	void deselectObject() {
 		onToggle();
 		EditorUI::deselectObject();
 	}
+	*/
 
 	void deselectAll() {
 		onToggle();
