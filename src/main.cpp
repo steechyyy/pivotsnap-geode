@@ -31,6 +31,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	struct Fields {
 
+		bool initialized = false;
 		CCSprite* snappedTo = nullptr;
 		CCArray* disabledWarps;
 		CCArray* warpSprites;
@@ -202,11 +203,11 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 	std::pair<bool, CCSprite*> snap(bool test) {
 
 		if (test) { // Testing mode: Returns if the pivot WOULD snap or not. Im repeating lots of code but i dont wanna make a separate function for this
-			updateValidSprites();
-
-			if (!m_mainNodeParent->isVisible()) {
+			if (!m_fields->initialized || !m_mainNodeParent->isVisible()) {
 				return std::make_pair(false, nullptr);
 			}
+
+			updateValidSprites();
 
 			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
 			CCArray* targets = m_fields->warpSprites;
@@ -300,6 +301,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			}, "pivot_snap"_spr);
 		#endif
 
+		
 		return true;
 	}
 
@@ -348,6 +350,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			}
 		}
 
+		m_fields->initialized = true;
 		return GJTransformControl::ccTouchBegan(p0, p1);
 	}
 
@@ -423,7 +426,12 @@ class $modify(TheEditorUI, EditorUI) {
 
 	void onBtn(CCObject*) {
 		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
-		caster->snap(false);
+
+		if (caster->m_fields->initialized) {
+			caster->snap(false);
+		}
+
+
 	}
 
 };
