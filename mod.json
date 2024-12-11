@@ -33,7 +33,12 @@
 			"id": "geode.custom-keybinds",
 			"version": ">=v1.1.0",
 			"importance": "required",
-			"platforms": ["win"]
+			"platforms": [ "win" ]
+		},
+		{
+			"id": "geode.node-ids",
+			"version": "v1.18.0",
+			"importance": "required"
 		}
 	],
 
