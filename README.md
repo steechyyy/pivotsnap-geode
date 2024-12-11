@@ -12,4 +12,4 @@ On desktop, the default keybind to change the snap mode is X, you can change tha
 If you encounter any issues ping me in the [geode sdk discord](discord.gg/geode) and i'll try to fix it
 
 
-*errr.. excuse the terrible & messy source code. it works though that's what matters right*
+*errr.. dear actual modders, excuse my terrible & tangled source code. it works though that's what matters right..?*

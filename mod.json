@@ -7,7 +7,7 @@
 	},
 	"id": "steechy.pivot_snap",
 	"name": "Pivot Snap",
-	"version": "v1.0.0",
+	"version": "v1.1.0",
 	"developer": "steechy",
 	"description": "allows easy snapping when warping objects",
 
@@ -17,13 +17,13 @@
 			"type": "title",
 			"name": "Pivot Snap Settings"
 		},
-
+		
 		"snap-mode": {
 			"name": "Snap mode",
-			"description": "change the snapping behavior of the pivot point to your liking (Currently only keybind but will add more)",
+			"description": "change the snapping behavior of the pivot point to your liking!!",
 			"type": "string",
 			"default": "keybind",
-			"one-of": [ "keybind" ]
+			"one-of": [ "keybind", "button" ]
 		}
 
 	},
@@ -37,10 +37,16 @@
 		}
 	],
 
+	"resources": {
+		"sprites": [
+			"resources/GJ_snapBtn_001.png"
+		]
+	},
+
 	"links": {
 		"source": "https://github.com/steechyyy/pivotsnap-geode"
 	},
 
-	"tags": [ "editor", "utility", "enhancement", "modtober24" ]
+	"tags": [ "editor", "utility", "enhancement"]
 
 }

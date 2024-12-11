@@ -1,39 +1,19 @@
 /**
- * Include the Geode headers.
+ * Include the Geode headers
  */
 #include <Geode/Geode.hpp>
+#include <Geode/modify/GJTransformControl.hpp>
+#include <Geode/modify/EditorUI.hpp>
+
 #ifdef GEODE_IS_WINDOWS
 #include <geode.custom-keybinds/include/Keybinds.hpp>
 #endif
 
- /**
-  * Brings cocos2d and all Geode namespaces to the current scope.
-  */
 using namespace geode::prelude;
 #ifdef GEODE_IS_WINDOWS
 using namespace keybinds;
 #endif
 
-/**
- * `$modify` lets you extend and modify GD's classes.
- * To hook a function in Geode, simply $modify the class
- * and write a new function definition with the signature of
- * the function you want to hook.
- *
- * Here we use the overloaded `$modify` macro to set our own class name,
- * so that we can use it for button callbacks.
- *
- * Notice the header being included, you *must* include the header for
- * the class you are modifying, or you will get a compile error.
- *
- * Another way you could do this is like this:
- *
- * struct MyMenuLayer : Modify<MyMenuLayer, MenuLayer> {};
- */
-
-#include <Geode/modify/GJTransformControl.hpp>
-#include <Geode/modify/LevelEditorLayer.hpp>
-#include <Geode/modify/EditorUI.hpp>
 
 #ifdef GEODE_IS_WINDOWS
 $execute {
@@ -73,7 +53,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			m_fields->warpSprites->removeAllObjects();
 		}
 
-		// Getting the frame name "warpBtn_02_001.png" cuz that's the buttons we need. Thanks DevTools
+		// Getting the frame name "warpBtn_02_001.png" cuz that's the buttons i need. Thanks DevTools
 		const std::string textureNomenclature = "warpBtn_02_001.png";
 
 		auto* cachedFrames = CCSpriteFrameCache::sharedSpriteFrameCache()->m_pSpriteFrames;
@@ -368,7 +348,6 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			}
 		}
 
-
 		return GJTransformControl::ccTouchBegan(p0, p1);
 	}
 
@@ -376,14 +355,77 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 class $modify(TheEditorUI, EditorUI) {
 
-	void onToggle() {
-		static_cast<TheTransformCtrls*>(m_transformControl)->enableWarpers();
+	struct Fields {
+		CCMenuItemSpriteExtra* snapBtn = nullptr;
+	};
+
+	static void onModify(auto & self) {
+		(void)self.setHookPriority("EditorUI::init", -3000);
 	}
-	
-	void activateTransformControl(CCObject* p0) {
-		log::debug("Print");
+
+
+	void onToggle() {
+		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
+		caster->enableWarpers();
+	}
+
+	void deselectObject() {
 		onToggle();
-		EditorUI::activateTransformControl(p0);
+		EditorUI::deselectObject();
+	}
+
+	void deselectAll() {
+		onToggle();
+		EditorUI::deselectAll();
+	}
+
+	bool init(LevelEditorLayer* editorLayer) {
+
+		if (!EditorUI::init(editorLayer)) {
+			return false;
+		}
+
+		if (Mod::get()->getSettingValue<std::string>("snap-mode") == "button") {
+			auto btn = CCMenuItemSpriteExtra::create(
+				CCSprite::create("GJ_snapBtn_001.png"_spr),
+				this,
+				menu_selector(TheEditorUI::onBtn)
+			);
+
+			CCSize size = m_unlinkBtn->getContentSize();
+
+			float X = m_unlinkBtn->getPositionX() + (size.width / 2) + 10.f;
+
+			//This is so it doesn't mess up that one Alphalaneous mod
+			if (CCNode* linkMenu = this->getChildByID("link-menu")) {
+				if (AxisLayout* layout = typeinfo_cast<AxisLayout*>(linkMenu->getLayout())) {
+					layout->setGap(0);
+				}
+				if (CCNode* zoomMenu = this->getChildByID("zoom-menu")) {
+					float origScale = linkMenu->getScale();
+					linkMenu->setContentHeight(140);
+					linkMenu->setScale(0.8f * origScale);
+					linkMenu->setPosition((zoomMenu->getPositionX() + 45 * origScale), (zoomMenu->getPositionY() + 2));
+					linkMenu->setAnchorPoint(zoomMenu->getAnchorPoint());
+					linkMenu->addChild(btn);
+					linkMenu->updateLayout();
+					m_fields->snapBtn = btn;
+				}
+
+			}
+		}
+		
+		return true;
+
+	}
+
+	void onBtn(CCObject*) {
+		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
+		caster->snap(false);
 	}
 
 };
+
+
+//TODO::
+//		 Android support!! Mit Doppeltippen snappen.
