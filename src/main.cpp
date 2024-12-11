@@ -424,6 +424,23 @@ class $modify(TheEditorUI, EditorUI) {
 
 	}
 
+	void onPlaytest(CCObject* p0) {
+		if (m_fields->snapBtn) {
+			m_fields->snapBtn->setVisible(false);
+		}
+
+		EditorUI::onPlaytest(p0);
+	}
+
+	void onStopPlaytest(CCObject* p0) {
+		if (m_fields->snapBtn) {
+			m_fields->snapBtn->setVisible(true);
+		}
+
+		EditorUI::onStopPlaytest(p0);
+	}
+
+
 	void onBtn(CCObject*) {
 		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
 
