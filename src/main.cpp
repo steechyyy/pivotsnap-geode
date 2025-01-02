@@ -16,7 +16,7 @@ using namespace keybinds;
 
 
 #ifdef GEODE_IS_WINDOWS
-$execute {
+$execute{
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
 		"Snap",
@@ -103,7 +103,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	}
 
-	void updateDisabledWarps() { 
+	void updateDisabledWarps() {
 
 		enableWarpers();
 
@@ -149,7 +149,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		if (axisAlignedSprites->count() != 4) { //If it's not a corner
 
 			if (yCount > xCount) { //if there were more horizontal positions found than vertical ones, it must be a horizontal row
-				
+
 
 				m_fields->disabledWarps->removeAllObjects();
 				CCObject* rowObject;
@@ -163,7 +163,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			}
 			else if (xCount > yCount) { // if there were more vertical positions found, must be a vertical row then, right?
-				
+
 
 				m_fields->disabledWarps->removeAllObjects();
 				CCObject* columnObject;
@@ -230,11 +230,11 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 
 			if (foundObjs == 0) {
-				log::debug("Test! No snap.");
+				// log::debug("Test! No snap.");
 				return std::make_pair(false, nullptr);
 			}
 			else {
-				log::debug("Test! Would snap.");
+				// log::debug("Test! Would snap.");
 				return std::make_pair(true, result);
 			}
 
@@ -271,7 +271,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			if (foundObjs == 0) {
 				m_fields->snappedTo = nullptr;
 				enableWarpers();
-				log::debug("No objects to snap to found");
+				// log::debug("No objects to snap to found");
 			}
 
 
@@ -279,7 +279,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			updateDisabledWarps();
 			return std::make_pair(false, nullptr);
 		}
-		
+
 	};
 
 
@@ -290,23 +290,23 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
-		#ifdef GEODE_IS_WINDOWS
+#ifdef GEODE_IS_WINDOWS
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
 			if (event->isDown() && method == "keybind") {
 				snap(false);
-				log::debug("Attempted to snap.");
+				// log::debug("Attempted to snap.");
 			}
 
 			return ListenerResult::Propagate;
 			}, "pivot_snap"_spr);
-		#endif
+#endif
 
-		
+
 		return true;
 	}
 
 
-	virtual void ccTouchEnded(CCTouch* p0, CCEvent* p1) {
+	virtual void ccTouchEnded(CCTouch * p0, CCEvent * p1) {
 		auto snapRes = snap(true);
 
 		if (!snapRes.first || snapRes.first && m_fields->warpSprites->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
@@ -316,22 +316,22 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::ccTouchEnded(p0, p1);
 	}
 
-	virtual bool ccTouchBegan(CCTouch* p0, CCEvent* p1) {
+	virtual bool ccTouchBegan(CCTouch * p0, CCEvent * p1) {
 		CCPoint location = p0->getStartLocation();
-		
+
 
 		if (m_fields->disabledWarps->count() > 0) {
-			
+
 
 			CCObject* disabledWarper;
 			CCARRAY_FOREACH(m_fields->disabledWarps, disabledWarper) {
-				
+
 				CCSprite* warper = typeinfo_cast<CCSprite*>(disabledWarper);
 				if (!warper) continue;
 
 				float deadzoneWidth = warper->getContentWidth() * 1.1;
 				float deadzoneHeight = warper->getContentHeight() * 1.1;
-				
+
 				CCPoint worldPos = warper->getParent()->convertToWorldSpace(warper->getPosition());
 				CCRect bounderBox = CCRect(
 					worldPos.x - deadzoneWidth / 2,
@@ -340,10 +340,10 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 					deadzoneHeight
 				);
 
-				log::debug("Width: {}, Height: {}", warper->getContentWidth(), warper->getContentHeight());
+				// log::debug("Width: {}, Height: {}", warper->getContentWidth(), warper->getContentHeight());
 
 				if (bounderBox.containsPoint(location)) {
-					log::debug("Touched forbidden point");
+					// log::debug("Touched forbidden point");
 					return true;
 				}
 
@@ -384,7 +384,7 @@ class $modify(TheEditorUI, EditorUI) {
 		EditorUI::deselectAll();
 	}
 
-	bool init(LevelEditorLayer* editorLayer) {
+	bool init(LevelEditorLayer * editorLayer) {
 
 		if (!EditorUI::init(editorLayer)) {
 			return false;
@@ -419,12 +419,12 @@ class $modify(TheEditorUI, EditorUI) {
 
 			}
 		}
-		
+
 		return true;
 
 	}
 
-	void onPlaytest(CCObject* p0) {
+	void onPlaytest(CCObject * p0) {
 		if (m_fields->snapBtn) {
 			m_fields->snapBtn->setVisible(false);
 		}
@@ -432,7 +432,7 @@ class $modify(TheEditorUI, EditorUI) {
 		EditorUI::onPlaytest(p0);
 	}
 
-	void onStopPlaytest(CCObject* p0) {
+	void onStopPlaytest(CCObject * p0) {
 		if (m_fields->snapBtn) {
 			m_fields->snapBtn->setVisible(true);
 		}
@@ -455,4 +455,4 @@ class $modify(TheEditorUI, EditorUI) {
 
 
 //TODO::
-//		 Android support!! Mit Doppeltippen snappen.
+//		 Android mit Doppeltippen snappen.
