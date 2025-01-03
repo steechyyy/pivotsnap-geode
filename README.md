@@ -13,8 +13,8 @@ this is my first ever mod so i hope u enjoyed, dont forget to like, subscribe an
 
 On desktop, the default keybind to change the snap mode is X, you can change that in the custom keybinds settings.
 
-On mac, use the snap button on the left.
+On mac/android, use the snap button on the left.
 
-If you encounter any issues, privately message me on discord (@steechy) or ping me in the [geode sdk discord](discord.gg/geode) and i'll try to fix it
+If you encounter any issues, privately message me on discord (@steechy) or ping me in the [geode sdk server](discord.gg/geode) and i'll try to fix it
 
 ###### thx hiimjustin000 for helping with adding mac & android support!!
