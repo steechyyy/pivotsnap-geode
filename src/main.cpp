@@ -53,7 +53,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	void updateValidSprites() {
 		if (m_fields->warpSprites->count() > 0) {
-			m_fields->warpSprites->removeAllObjects(); // Clear existing objects safely
+			m_fields->warpSprites->removeAllObjects();
 		}
 
 		const std::string textureNomenclature = "warpBtn_02_001.png";
@@ -74,7 +74,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		// Iterate over the main node's children and filter based on texture
 		CCObject* obj;
 		CCARRAY_FOREACH(m_mainNodeParent->getChildren(), obj) {
-			if (auto spriteNode = dynamic_cast<CCSprite*>(obj)) {
+			if (auto spriteNode = typeinfo_cast<CCSprite*>(obj)) {
 				auto rect = spriteNode->getTextureRect();
 
 				auto it = frameMap.find(textureNomenclature);
@@ -97,7 +97,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			//Disable the disabled. I hope that makes sense :D
 			CCObject* warper;
 			CCARRAY_FOREACH(m_fields->disabledWarps, warper) {
-				if (auto warperSprite = dynamic_cast<CCSprite*>(warper)) {
+				if (auto warperSprite = typeinfo_cast<CCSprite*>(warper)) {
 					warperSprite->setColor({ 255, 255, 255 });
 				}
 				else {
@@ -129,7 +129,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		CCArray* axisAlignedSprites = CCArray::create(); // WILL contain all sprites that align on either the x or y axis
 		axisAlignedSprites->retain();
 		CCARRAY_FOREACH(m_fields->warpSprites, warpSpriteObj) {
-			if (CCSprite* CCwarpSprite = dynamic_cast<CCSprite*>(warpSpriteObj)) {
+			if (CCSprite* CCwarpSprite = typeinfo_cast<CCSprite*>(warpSpriteObj)) {
 				
 				if (!m_fields->disabledWarps->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
 					if (abs(CCwarpSprite->getPositionX() - xPos) < EPSILON) {
@@ -159,7 +159,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 				CCObject* rowObject;
 				CCARRAY_FOREACH(m_fields->warpSprites, rowObject) {
 
-					if (CCSprite* rowObj = dynamic_cast<CCSprite*>(rowObject)) {
+					if (CCSprite* rowObj = typeinfo_cast<CCSprite*>(rowObject)) {
 						if (abs(rowObj->getPositionY() - yPos) < EPSILON && rowObj != warpSprite) {
 							m_fields->disabledWarps->addObject(rowObj);
 						}
@@ -174,7 +174,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 				CCObject* columnObject;
 				CCARRAY_FOREACH(m_fields->warpSprites, columnObject) {
 
-					if (CCSprite* columnObj = dynamic_cast<CCSprite*>(columnObject)) {
+					if (CCSprite* columnObj = typeinfo_cast<CCSprite*>(columnObject)) {
 						if (abs(columnObj->getPositionX() - xPos) < EPSILON && columnObj != warpSprite) {
 							m_fields->disabledWarps->addObject(columnObj);
 						}
@@ -188,7 +188,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		else {
 			CCObject* axisObj;
 			CCARRAY_FOREACH(axisAlignedSprites, axisObj) {
-				if (CCSprite* axisObject = dynamic_cast<CCSprite*>(axisObj)) {
+				if (CCSprite* axisObject = typeinfo_cast<CCSprite*>(axisObj)) {
 					m_fields->disabledWarps->addObject(axisObject);
 				}
 			}
@@ -199,7 +199,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		CCObject* warp;
 		CCARRAY_FOREACH(m_fields->disabledWarps, warp) {
 
-			if (CCSprite* warpObject = dynamic_cast<CCSprite*>(warp)) {
+			if (CCSprite* warpObject = typeinfo_cast<CCSprite*>(warp)) {
 				warpObject->setColor(disabledclr);
 			}
 			
@@ -227,7 +227,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			CCObject* obj;
 			CCSprite* result;
 			CCARRAY_FOREACH(targets, obj) {
-				CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj);
+				CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj);
 
 				if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
 					result = warpSprite;
@@ -269,7 +269,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			CCObject* obj;
 			CCARRAY_FOREACH(targets, obj) {
 
-				if (CCSprite* warpSprite = dynamic_cast<CCSprite*>(obj)) {
+				if (CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj)) {
 
 					if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
 
@@ -344,7 +344,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			CCObject* disabledWarper;
 			CCARRAY_FOREACH(m_fields->disabledWarps, disabledWarper) {
 
-				CCSprite* warper = dynamic_cast<CCSprite*>(disabledWarper);
+				CCSprite* warper = typeinfo_cast<CCSprite*>(disabledWarper);
 				if (!warper) continue;
 
 				float deadzoneWidth = warper->getContentWidth() * 1.1;
@@ -421,7 +421,7 @@ class $modify(TheEditorUI, EditorUI) {
 
 			//This is so it doesn't mess up that one Alphalaneous mod
 			if (CCNode* linkMenu = this->getChildByID("link-menu")) {
-				if (AxisLayout* layout = dynamic_cast<AxisLayout*>(linkMenu->getLayout())) {
+				if (AxisLayout* layout = typeinfo_cast<AxisLayout*>(linkMenu->getLayout())) {
 					layout->setGap(0);
 				}
 				if (CCNode* zoomMenu = this->getChildByID("zoom-menu")) {
