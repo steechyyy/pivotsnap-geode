@@ -450,12 +450,12 @@ class $modify(TheEditorUI, EditorUI) {
 		EditorUI::onPlaytest(p0);
 	}
 
-	void onStopPlaytest(CCObject * p0) {
+	void playtestStopped() {
 		if (m_fields->snapBtn) {
 			m_fields->snapBtn->setVisible(true);
 		}
 
-		EditorUI::onStopPlaytest(p0);
+		EditorUI::playtestStopped();
 	}
 
 
