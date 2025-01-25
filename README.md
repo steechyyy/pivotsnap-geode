@@ -17,4 +17,4 @@ On mac/android, use the snap button on the left.
 
 If you encounter any issues, privately message me on discord (@steechy) or ping me in the [geode sdk server](discord.gg/geode) and i'll try to fix it
 
-###### thx hiimjustin000 for helping with adding mac & android support!!
+###### thx hiimjasmine000 for helping with adding mac & android support!!
