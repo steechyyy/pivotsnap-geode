@@ -5,17 +5,16 @@
 #include <Geode/modify/GJTransformControl.hpp>
 #include <Geode/modify/EditorUI.hpp>
 
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 #include <geode.custom-keybinds/include/Keybinds.hpp>
 #endif
 
 using namespace geode::prelude;
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 using namespace keybinds;
 #endif
 
-
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 $execute{
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
@@ -51,7 +50,22 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	};
 
+	bool munkCheck() {
+		if (m_unk1 && m_unk1 != nullptr) {
+			// log::debug("mandatory string, {}", m_unk1);
+			return true;
+		}
+
+		// log::debug("i think its nullptr, {}", m_unk1);
+		return false;
+	}
+
+	
+
 	void updateValidSprites() {
+
+		// auto test = Loader::get()->isModLoaded("geode.custom-keybinds");
+
 		if (m_fields->warpSprites->count() > 0) {
 			m_fields->warpSprites->removeAllObjects();
 		}
@@ -304,14 +318,15 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	//Now im hooking le functionas.
 	virtual bool init() {
+		// log::debug("initialized!");
 		enableWarpers();
 
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
-			if (event->isDown() && method == "keybind") {
+			if (event->isDown() && method == "keybind" && munkCheck()) {
 				snap(false);
 				// log::debug("Attempted to snap.");
 			}
@@ -320,7 +335,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		}, "pivot_snap"_spr);
 #endif
 
-
+		m_fields->initialized = true;
 		return true;
 	}
 
@@ -368,7 +383,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			}
 		}
 
-		m_fields->initialized = true;
+		
 		return GJTransformControl::ccTouchBegan(p0, p1);
 	}
 
@@ -385,28 +400,14 @@ class $modify(TheEditorUI, EditorUI) {
 	}
 
 
-	void onToggle() {
-		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
-		caster->enableWarpers();
-	}
-
-	/*
-	void deselectObject() {
-		onToggle();
-		EditorUI::deselectObject();
-	}
-	*/
-
-	void deselectAll() {
-		onToggle();
-		EditorUI::deselectAll();
-	}
-
 	bool init(LevelEditorLayer * editorLayer) {
 
 		if (!EditorUI::init(editorLayer)) {
 			return false;
 		}
+
+
+		NodeIDs::provideFor(this);
 
 		if (Mod::get()->getSettingValue<std::string>("snap-mode") == "button") {
 			auto btn = CCMenuItemSpriteExtra::create(
@@ -438,8 +439,36 @@ class $modify(TheEditorUI, EditorUI) {
 			}
 		}
 
+
 		return true;
 
+	}
+
+	/*
+	virtual bool ccTouchBegan(CCTouch* p0, CCEvent* p1) {
+		log::debug("blud");
+		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
+		caster->munk1();
+		EditorUI::ccTouchBegan(p0, p1);
+	}
+	*/
+
+	void onToggle() {
+		auto caster = static_cast<TheTransformCtrls*>(m_transformControl);
+		caster->enableWarpers();
+	}
+	
+
+	/*
+	void deselectObject() {
+		onToggle();
+		EditorUI::deselectObject();
+	}
+	*/
+
+	void deselectAll() {
+		onToggle();
+		EditorUI::deselectAll();
 	}
 
 	void onPlaytest(CCObject * p0) {
@@ -466,11 +495,11 @@ class $modify(TheEditorUI, EditorUI) {
 			caster->snap(false);
 		}
 
-
 	}
 
 };
 
 
 //TODO::
-//		 Android mit Doppeltippen snappen.
+//		einen MUNK1 Check machen
+//		dann vitox fragen ob es klappt

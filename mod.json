@@ -17,7 +17,7 @@
 			"type": "title",
 			"name": "Pivot Snap Settings"
 		},
-		
+
 		"snap-mode": {
 			"name": "Snap mode",
 			"description": "change the snapping behavior of the pivot point to your liking!!",
@@ -32,12 +32,11 @@
 		{
 			"id": "geode.custom-keybinds",
 			"version": ">=v1.1.0",
-			"importance": "required",
-			"platforms": [ "win" ]
+			"importance": "recommended"
 		},
 		{
 			"id": "geode.node-ids",
-			"version": "v1.18.0",
+			"version": ">=v1.19.0",
 			"importance": "required"
 		}
 	],
@@ -52,6 +51,6 @@
 		"source": "https://github.com/steechyyy/pivotsnap-geode"
 	},
 
-	"tags": [ "editor", "utility", "enhancement"]
+	"tags": [ "editor", "utility", "enhancement" ]
 
 }
