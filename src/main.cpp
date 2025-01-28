@@ -5,16 +5,16 @@
 #include <Geode/modify/GJTransformControl.hpp>
 #include <Geode/modify/EditorUI.hpp>
 
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 #include <geode.custom-keybinds/include/Keybinds.hpp>
 #endif
 
 using namespace geode::prelude;
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 using namespace keybinds;
 #endif
 
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 $execute{
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
@@ -225,6 +225,11 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	std::pair<bool, CCSprite*> snap(bool test) {
 
+		if (!munkCheck()) {
+			log::warn("the warp tool seems to not be properly initialized. If you have the warp tool open and you see this, please report !!!");
+			return std::make_pair(false, nullptr);
+		}
+
 		if (test) { // Testing mode: Returns if the pivot WOULD snap or not. Im repeating lots of code but i dont wanna make a separate function for this
 			if (!m_fields->initialized || !m_mainNodeParent->isVisible()) {
 				return std::make_pair(false, nullptr);
@@ -324,9 +329,9 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
-#ifdef GEODE_IS_WINDOWS
+#ifndef GEODE_IS_ANDROID
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
-			if (event->isDown() && method == "keybind") {
+			if (event->isDown() && method == "keybind" && munkCheck()) {
 				snap(false);
 				// log::debug("Attempted to snap.");
 			}

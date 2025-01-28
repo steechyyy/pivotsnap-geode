@@ -1,4 +1,3 @@
-
 # Pivot Snap
 
 <img src="logo.png" width="150" alt="the mod's logo" />
@@ -9,12 +8,11 @@ this is my first ever mod so i hope u enjoyed, dont forget to like, subscribe an
 
 # How to use
 
-### **before use, change the snap mode in the mod's settings. <cr>If you're NOT on windows, the "keybind" option is not supported, so please change it to "button"**</c>
+### **before use, change the snap mode in the mod's settings. <cr>IF YOU'RE ON MOBILE, THE "keybind" OPTION ISN'T SUPPORTED, so please change it to "button"**</c>
 
-On desktop, the default keybind to change the snap mode is X, you can change that in the custom keybinds settings.
+**The default keybind to snap is X**. When using the button, **the button is found on the left side of the screen.**
+*(im working on more methods i promise)*
 
-On mac/android, use the snap button on the left.
-
-If you encounter any issues, privately message me on discord (@steechy) or ping me in the [geode sdk server](discord.gg/geode) and i'll try to fix it
+If you encounter any issues, privately message me on discord (@steechy) or ping me in the [geode sdk server](discord.gg/geode) and i'll see what i can do =3
 
 ###### thx hiimjasmine00 for helping with adding mac & android support!!

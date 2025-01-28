@@ -1,5 +1,5 @@
 # 1.1.3
-- Finally fixed major crash (Thanks dank_meme)
+- Finally fixed major crash (Thank u so much dank_meme)
 - Keybind support for mac (cuz custom keybinds is now on macintosh devices)
 
 # 1.1.2
