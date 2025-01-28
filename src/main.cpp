@@ -5,16 +5,16 @@
 #include <Geode/modify/GJTransformControl.hpp>
 #include <Geode/modify/EditorUI.hpp>
 
-#ifndef GEODE_IS_ANDROID
+#ifdef GEODE_IS_WINDOWS
 #include <geode.custom-keybinds/include/Keybinds.hpp>
 #endif
 
 using namespace geode::prelude;
-#ifndef GEODE_IS_ANDROID
+#ifdef GEODE_IS_WINDOWS
 using namespace keybinds;
 #endif
 
-#ifndef GEODE_IS_ANDROID
+#ifdef GEODE_IS_WINDOWS
 $execute{
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
@@ -324,9 +324,9 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
-#ifndef GEODE_IS_ANDROID
+#ifdef GEODE_IS_WINDOWS
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
-			if (event->isDown() && method == "keybind" && munkCheck()) {
+			if (event->isDown() && method == "keybind") {
 				snap(false);
 				// log::debug("Attempted to snap.");
 			}

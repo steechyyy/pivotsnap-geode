@@ -32,7 +32,7 @@
 		{
 			"id": "geode.custom-keybinds",
 			"version": ">=v1.1.0",
-			"importance": "recommended"
+			"importance": "required"
 		},
 		{
 			"id": "geode.node-ids",
