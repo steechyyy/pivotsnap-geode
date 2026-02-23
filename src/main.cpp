@@ -5,16 +5,18 @@
 #include <Geode/modify/GJTransformControl.hpp>
 #include <Geode/modify/EditorUI.hpp>
 
+/*
 #ifndef GEODE_IS_ANDROID
 #include <geode.custom-keybinds/include/Keybinds.hpp>
 #endif
+*/
 
 using namespace geode::prelude;
+
+/*
 #ifndef GEODE_IS_ANDROID
 using namespace keybinds;
-#endif
 
-#ifndef GEODE_IS_ANDROID
 $execute{
 	BindManager::get()->registerBindable({
 		"pivot_snap"_spr,
@@ -25,6 +27,8 @@ $execute{
 	});
 }
 #endif
+*/
+
 
 const float EPSILON = 0.001f;
 
@@ -34,24 +38,22 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 		bool initialized = false;
 		CCSprite* snappedTo = nullptr;
-		CCArray* disabledWarps;
-		CCArray* warpSprites;
+		Ref<CCArrayExt<CCSprite>> disabledWarps;
+		Ref<CCArrayExt<CCSprite>> warpSprites;
 
-		Fields()
-			: disabledWarps(CCArray::create()), warpSprites(CCArray::create()) {
-			disabledWarps->retain();
-			warpSprites->retain();
+		Fields() {
+
 		}
 
 		~Fields() {
-			disabledWarps->release();
-			warpSprites->release();
+
 		}
 
 	};
 
-	bool munkCheck() {
-		if (m_unk1 && m_unk1 != nullptr) {
+	bool objectsCheck() {
+		log::debug("{}", m_objects);
+		if (m_objects && m_objects != nullptr) {
 			// log::debug("mandatory string, {}", m_unk1);
 			return true;
 		}
@@ -64,10 +66,8 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	void updateValidSprites() {
 
-		// auto test = Loader::get()->isModLoaded("geode.custom-keybinds");
-
-		if (m_fields->warpSprites->count() > 0) {
-			m_fields->warpSprites->removeAllObjects();
+		if (m_fields->warpSprites->inner()->count() == 0) {
+			m_fields->warpSprites->inner()->removeAllObjects();
 		}
 
 		const std::string textureNomenclature = "warpBtn_02_001.png";
@@ -86,19 +86,17 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		}
 
 		// Iterate over the main node's children and filter based on texture
-		CCObject* obj;
-		CCARRAY_FOREACH(m_mainNodeParent->getChildren(), obj) {
-			if (auto spriteNode = typeinfo_cast<CCSprite*>(obj)) {
-				auto rect = spriteNode->getTextureRect();
+		for (CCSprite* spriteNode : CCArrayExt<CCSprite*>(m_mainNodeParent->getChildren())) {
+			auto rect = spriteNode->getTextureRect();
 
-				auto it = frameMap.find(textureNomenclature);
-				if (it != frameMap.end() && it->second->getRect() == rect) {
-					m_fields->warpSprites->addObject(spriteNode);
-				}
+			auto it = frameMap.find(textureNomenclature);
+			if (it != frameMap.end() && it->second->getRect() == rect) {
+				m_fields->warpSprites->inner()->addObject(spriteNode);
 			}
 		}
 
-		if (m_fields->warpSprites->count() <= 0) {
+
+		if (m_fields->warpSprites->inner()->count() <= 0) {
 			log::warn("updateValidSprites(): No warp sprite textures found. This shouldn't happen, report if this does.");
 		}
 
@@ -107,18 +105,21 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 
 	void enableWarpers() {
-		if (m_fields->disabledWarps->count() > 0) {
+		if (m_fields->disabledWarps->inner()->count() > 0) {
 			//Disable the disabled. I hope that makes sense :D
-			CCObject* warper;
-			CCARRAY_FOREACH(m_fields->disabledWarps, warper) {
-				if (auto warperSprite = typeinfo_cast<CCSprite*>(warper)) {
-					warperSprite->setColor({ 255, 255, 255 });
-				}
-				else {
+			
+			for (CCSprite* warperSprite : *m_fields->disabledWarps.data()) {
+				warperSprite->setColor({ 255, 255, 255 });
+				
+				/*
+				{
 					log::warn("enableWarpers(): Unexpected object inside disabledWarps. This shouldn't happen, please report!!");
 				}
+				*/
+
 			}
-			m_fields->disabledWarps->removeAllObjects();
+
+			m_fields->disabledWarps->inner()->removeAllObjects();
 		}
 	}
 
@@ -142,82 +143,66 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		CCObject* warpSpriteObj;
 		CCArray* axisAlignedSprites = CCArray::create(); // WILL contain all sprites that align on either the x or y axis
 		axisAlignedSprites->retain();
-		CCARRAY_FOREACH(m_fields->warpSprites, warpSpriteObj) {
-			if (CCSprite* CCwarpSprite = typeinfo_cast<CCSprite*>(warpSpriteObj)) {
-				
-				if (!m_fields->disabledWarps->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
-					if (abs(CCwarpSprite->getPositionX() - xPos) < EPSILON) {
 
-						axisAlignedSprites->addObject(CCwarpSprite);
-						xCount++;
+		for (CCSprite* CCwarpSprite : *m_fields->warpSprites.data()) {
 
-					}
+			if (!m_fields->disabledWarps->inner()->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
+				if (abs(CCwarpSprite->getPositionX() - xPos) < EPSILON) {
 
-					if (abs(CCwarpSprite->getPositionY() - yPos) < EPSILON) {
+					axisAlignedSprites->addObject(CCwarpSprite);
+					xCount++;
 
-						axisAlignedSprites->addObject(CCwarpSprite);
-						yCount++;
+				}
 
-					}
+				if (abs(CCwarpSprite->getPositionY() - yPos) < EPSILON) {
 
-				};
-			}
+					axisAlignedSprites->addObject(CCwarpSprite);
+					yCount++;
 
+				}
+
+			};
 		}
 
 		if (axisAlignedSprites->count() != 4) { //If it's not a corner
 
 			if (yCount > xCount) { //if there were more horizontal positions found than vertical ones, it must be a horizontal row
 
-				m_fields->disabledWarps->removeAllObjects();
-				CCObject* rowObject;
-				CCARRAY_FOREACH(m_fields->warpSprites, rowObject) {
-
-					if (CCSprite* rowObj = typeinfo_cast<CCSprite*>(rowObject)) {
-						if (abs(rowObj->getPositionY() - yPos) < EPSILON && rowObj != warpSprite) {
-							m_fields->disabledWarps->addObject(rowObj);
-						}
+				m_fields->disabledWarps->inner()->removeAllObjects();
+				for (auto rowObj : *m_fields->warpSprites.data()) {
+					if (abs(rowObj->getPositionY() - yPos) < EPSILON && rowObj != warpSprite) {
+						m_fields->disabledWarps->inner()->addObject(rowObj);
 					}
-
 				}
 
 			}
 			else if (xCount > yCount) { // if there were more vertical positions found, must be a vertical row then, right?
 
-				m_fields->disabledWarps->removeAllObjects();
-				CCObject* columnObject;
-				CCARRAY_FOREACH(m_fields->warpSprites, columnObject) {
+				m_fields->disabledWarps->inner()->removeAllObjects();
 
-					if (CCSprite* columnObj = typeinfo_cast<CCSprite*>(columnObject)) {
-						if (abs(columnObj->getPositionX() - xPos) < EPSILON && columnObj != warpSprite) {
-							m_fields->disabledWarps->addObject(columnObj);
-						}
+				for (CCSprite* columnObj : *m_fields->warpSprites.data()) {
+					if (abs(columnObj->getPositionX() - xPos) < EPSILON && columnObj != warpSprite) {
+						m_fields->disabledWarps->inner()->addObject(columnObj);
 					}
-
 				}
 
 			}
 
 		}
 		else {
-			CCObject* axisObj;
-			CCARRAY_FOREACH(axisAlignedSprites, axisObj) {
-				if (CCSprite* axisObject = typeinfo_cast<CCSprite*>(axisObj)) {
-					m_fields->disabledWarps->addObject(axisObject);
-				}
+			for (auto axisObject : CCArrayExt<CCSprite*>(axisAlignedSprites)) {
+				m_fields->disabledWarps->inner()->addObject(axisObject);
 			}
 
 		}
 
 		// applying colors because visual stuff gives me dopamine
 		CCObject* warp;
-		CCARRAY_FOREACH(m_fields->disabledWarps, warp) {
 
-			if (CCSprite* warpObject = typeinfo_cast<CCSprite*>(warp)) {
-				warpObject->setColor(disabledclr);
-			}
-			
+		for (auto v : *m_fields->disabledWarps.data()) {
+			v->setColor(disabledclr);
 		}
+
 		// It's as shrimple as that!!!
 
 		axisAlignedSprites->release(); // memory not leaking anymor
@@ -225,7 +210,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	std::pair<bool, CCSprite*> snap(bool test) {
 
-		if (!munkCheck()) {
+		if (!objectsCheck()) {
 			log::warn("the warp tool seems to not be properly initialized. If you have the warp tool open and you see this, please report !!!");
 			return std::make_pair(false, nullptr);
 		}
@@ -238,18 +223,15 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			updateValidSprites();
 
 			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-			CCArray* targets = m_fields->warpSprites;
 			CCRect pivotBox = pivotNode->boundingBox();
 
 			int foundObjs = 0;
 
-			CCObject* obj;
-			CCSprite* result;
-			CCARRAY_FOREACH(targets, obj) {
-				CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj);
 
-				if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
-					result = warpSprite;
+			CCSprite* result;
+			for (CCSprite* v : *m_fields->warpSprites.data()) {
+				if (v && v != pivotNode && pivotBox.intersectsRect(v->boundingBox())) {
+					result = v;
 					foundObjs++;
 
 					break;
@@ -279,27 +261,22 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 
 			CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
-			CCArray* targets = m_fields->warpSprites;
 			CCRect pivotBox = pivotNode->boundingBox();
 
 			int foundObjs = 0;
 
 
-			CCObject* obj;
-			CCARRAY_FOREACH(targets, obj) {
+			for (CCSprite* v : *m_fields->warpSprites.data()) {
 
-				if (CCSprite* warpSprite = typeinfo_cast<CCSprite*>(obj)) {
+				if (v && v != pivotNode && pivotBox.intersectsRect(v->boundingBox())) {
 
-					if (warpSprite && warpSprite != pivotNode && pivotBox.intersectsRect(warpSprite->boundingBox())) {
+					CCPoint result = v->getParent()->convertToWorldSpace(v->getPosition());
 
-						CCPoint result = warpSprite->getParent()->convertToWorldSpace(warpSprite->getPosition());
+					pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(result));
+					m_fields->snappedTo = v;
+					foundObjs++;
+					break;
 
-						pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(result));
-						m_fields->snappedTo = warpSprite;
-						foundObjs++;
-						break;
-
-					}
 				}
 
 			}
@@ -321,15 +298,27 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 	};
 
 
-	//Now im hooking le functionas.
 	virtual bool init() {
 		// log::debug("initialized!");
+		if (!GJTransformControl::init()) {
+			return false;
+		}
+
 		enableWarpers();
 
-		GJTransformControl::init();
 		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
 #ifndef GEODE_IS_ANDROID
+		this->addEventListener(
+			KeybindSettingPressedEventV3(Mod::get(), "snap-keybind"),
+			[this, method](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+				if (down && !repeat && method == "keybind" && objectsCheck()) {
+					snap(false);
+				}
+			}
+		);
+
+		/* old ck code
 		this->template addEventListener<InvokeBindFilter>([=, this](InvokeBindEvent* event) {
 			if (event->isDown() && method == "keybind" && munkCheck()) {
 				snap(false);
@@ -338,17 +327,18 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			return ListenerResult::Propagate;
 		}, "pivot_snap"_spr);
+		*/
 #endif
 
 		m_fields->initialized = true;
 		return true;
 	}
-
+	
 
 	virtual void ccTouchEnded(CCTouch * p0, CCEvent * p1) {
 		auto snapRes = snap(true);
 
-		if (!snapRes.first || snapRes.first && m_fields->warpSprites->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
+		if (!snapRes.first || snapRes.first && m_fields->warpSprites->inner()->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
 			enableWarpers();
 		}
 
@@ -358,13 +348,10 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 	virtual bool ccTouchBegan(CCTouch * p0, CCEvent * p1) {
 		CCPoint location = p0->getStartLocation();
 
+		if (m_fields->disabledWarps->inner()->count() > 0) {
 
-		if (m_fields->disabledWarps->count() > 0) {
-
-			CCObject* disabledWarper;
-			CCARRAY_FOREACH(m_fields->disabledWarps, disabledWarper) {
-
-				CCSprite* warper = typeinfo_cast<CCSprite*>(disabledWarper);
+			
+			for (CCSprite* warper : *m_fields->disabledWarps.data()) {
 				if (!warper) continue;
 
 				float deadzoneWidth = warper->getContentWidth() * 1.1;
@@ -384,7 +371,6 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 					// log::debug("Touched forbidden point");
 					return true;
 				}
-
 			}
 		}
 

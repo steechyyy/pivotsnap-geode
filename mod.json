@@ -1,9 +1,10 @@
 {
-	"geode": "4.2.0",
+	"geode": "5.0.0",
 	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074"
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
 	},
 	"id": "steechy.pivot_snap",
 	"name": "Pivot Snap",
@@ -24,22 +25,22 @@
 			"type": "string",
 			"default": "keybind",
 			"one-of": [ "keybind", "button" ]
+		},
+
+		"snap-keybind":	{
+			"type": "keybind",
+			"name": "Snap Keybind",
+			"description": "snap the pivot point",
+			"default": "[X]",
+			"category": "editor",
+			"migrate-from": "steechy.pivot_snap/pivot_snap"
 		}
 
 	},
 
-	"dependencies": [
-		{
-			"id": "geode.custom-keybinds",
-			"version": ">=v1.1.0",
-			"importance": "required"
-		},
-		{
-			"id": "geode.node-ids",
-			"version": ">=v1.19.0",
-			"importance": "required"
-		}
-	],
+	"dependencies": {
+		"geode.node-ids": "1.19.0"
+	},
 
 	"resources": {
 		"sprites": [
