@@ -38,8 +38,8 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 		bool initialized = false;
 		CCSprite* snappedTo = nullptr;
-		Ref<CCArrayExt<CCSprite>> disabledWarps;
-		Ref<CCArrayExt<CCSprite>> warpSprites;
+		CCArrayExt<CCSprite> disabledWarps;
+		CCArrayExt<CCSprite> warpSprites;
 
 		Fields() {
 
@@ -66,8 +66,8 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 	void updateValidSprites() {
 
-		if (m_fields->warpSprites->inner()->count() == 0) {
-			m_fields->warpSprites->inner()->removeAllObjects();
+		if (m_fields->warpSprites.inner()->count() == 0) {
+			m_fields->warpSprites.inner()->removeAllObjects();
 		}
 
 		const std::string textureNomenclature = "warpBtn_02_001.png";
@@ -91,12 +91,12 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			auto it = frameMap.find(textureNomenclature);
 			if (it != frameMap.end() && it->second->getRect() == rect) {
-				m_fields->warpSprites->inner()->addObject(spriteNode);
+				m_fields->warpSprites.inner()->addObject(spriteNode);
 			}
 		}
 
 
-		if (m_fields->warpSprites->inner()->count() <= 0) {
+		if (m_fields->warpSprites.inner()->count() <= 0) {
 			log::warn("updateValidSprites(): No warp sprite textures found. This shouldn't happen, report if this does.");
 		}
 
@@ -105,10 +105,10 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 
 	void enableWarpers() {
-		if (m_fields->disabledWarps->inner()->count() > 0) {
+		if (m_fields->disabledWarps.inner()->count() > 0) {
 			//Disable the disabled. I hope that makes sense :D
 			
-			for (CCSprite* warperSprite : *m_fields->disabledWarps.data()) {
+			for (CCSprite* warperSprite : m_fields->disabledWarps) {
 				warperSprite->setColor({ 255, 255, 255 });
 				
 				/*
@@ -119,7 +119,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			}
 
-			m_fields->disabledWarps->inner()->removeAllObjects();
+			m_fields->disabledWarps.inner()->removeAllObjects();
 		}
 	}
 
@@ -144,9 +144,9 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		CCArray* axisAlignedSprites = CCArray::create(); // WILL contain all sprites that align on either the x or y axis
 		axisAlignedSprites->retain();
 
-		for (CCSprite* CCwarpSprite : *m_fields->warpSprites.data()) {
+		for (CCSprite* CCwarpSprite : m_fields->warpSprites) {
 
-			if (!m_fields->disabledWarps->inner()->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
+			if (!m_fields->disabledWarps.inner()->containsObject(CCwarpSprite) && CCwarpSprite != warpSprite) {
 				if (abs(CCwarpSprite->getPositionX() - xPos) < EPSILON) {
 
 					axisAlignedSprites->addObject(CCwarpSprite);
@@ -168,21 +168,21 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 			if (yCount > xCount) { //if there were more horizontal positions found than vertical ones, it must be a horizontal row
 
-				m_fields->disabledWarps->inner()->removeAllObjects();
-				for (auto rowObj : *m_fields->warpSprites.data()) {
+				m_fields->disabledWarps.inner()->removeAllObjects();
+				for (auto rowObj : m_fields->warpSprites) {
 					if (abs(rowObj->getPositionY() - yPos) < EPSILON && rowObj != warpSprite) {
-						m_fields->disabledWarps->inner()->addObject(rowObj);
+						m_fields->disabledWarps.inner()->addObject(rowObj);
 					}
 				}
 
 			}
 			else if (xCount > yCount) { // if there were more vertical positions found, must be a vertical row then, right?
 
-				m_fields->disabledWarps->inner()->removeAllObjects();
+				m_fields->disabledWarps.inner()->removeAllObjects();
 
-				for (CCSprite* columnObj : *m_fields->warpSprites.data()) {
+				for (CCSprite* columnObj : m_fields->warpSprites) {
 					if (abs(columnObj->getPositionX() - xPos) < EPSILON && columnObj != warpSprite) {
-						m_fields->disabledWarps->inner()->addObject(columnObj);
+						m_fields->disabledWarps.inner()->addObject(columnObj);
 					}
 				}
 
@@ -191,7 +191,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		}
 		else {
 			for (auto axisObject : CCArrayExt<CCSprite*>(axisAlignedSprites)) {
-				m_fields->disabledWarps->inner()->addObject(axisObject);
+				m_fields->disabledWarps.inner()->addObject(axisObject);
 			}
 
 		}
@@ -199,7 +199,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 		// applying colors because visual stuff gives me dopamine
 		CCObject* warp;
 
-		for (auto v : *m_fields->disabledWarps.data()) {
+		for (auto v : m_fields->disabledWarps) {
 			v->setColor(disabledclr);
 		}
 
@@ -229,7 +229,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 
 
 			CCSprite* result;
-			for (CCSprite* v : *m_fields->warpSprites.data()) {
+			for (CCSprite* v : m_fields->warpSprites) {
 				if (v && v != pivotNode && pivotBox.intersectsRect(v->boundingBox())) {
 					result = v;
 					foundObjs++;
@@ -266,7 +266,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 			int foundObjs = 0;
 
 
-			for (CCSprite* v : *m_fields->warpSprites.data()) {
+			for (CCSprite* v : m_fields->warpSprites) {
 
 				if (v && v != pivotNode && pivotBox.intersectsRect(v->boundingBox())) {
 
@@ -338,7 +338,7 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 	virtual void ccTouchEnded(CCTouch * p0, CCEvent * p1) {
 		auto snapRes = snap(true);
 
-		if (!snapRes.first || snapRes.first && m_fields->warpSprites->inner()->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
+		if (!snapRes.first || snapRes.first && m_fields->warpSprites.inner()->containsObject(snapRes.second) && snapRes.second != m_fields->snappedTo) {
 			enableWarpers();
 		}
 
@@ -348,10 +348,10 @@ class $modify(TheTransformCtrls, GJTransformControl) {
 	virtual bool ccTouchBegan(CCTouch * p0, CCEvent * p1) {
 		CCPoint location = p0->getStartLocation();
 
-		if (m_fields->disabledWarps->inner()->count() > 0) {
+		if (m_fields->disabledWarps.inner()->count() > 0) {
 
 			
-			for (CCSprite* warper : *m_fields->disabledWarps.data()) {
+			for (CCSprite* warper : m_fields->disabledWarps) {
 				if (!warper) continue;
 
 				float deadzoneWidth = warper->getContentWidth() * 1.1;
