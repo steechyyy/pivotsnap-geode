@@ -1,5 +1,5 @@
 {
-	"geode": "5.0.0",
+	"geode": "5.1.0",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
@@ -8,7 +8,7 @@
 	},
 	"id": "steechy.pivot_snap",
 	"name": "Pivot Snap",
-	"version": "v1.1.3",
+	"version": "v1.1.4",
 	"developer": "steechy",
 	"description": "allows easy snapping when warping objects",
 

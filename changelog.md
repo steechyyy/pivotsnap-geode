@@ -1,3 +1,7 @@
+# 1.1.4
+- Full rewrite
+- 2.2081
+
 # 1.1.3
 - Finally fixed major crash (Thank u so much dank_meme)
 - Keybind support for mac (cuz custom keybinds is now on macintosh devices)
