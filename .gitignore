@@ -50,6 +50,9 @@ build-*/
 # ILY vscode
 **/.vscode
 
+# no setting
+/CMakeSettings.json
+
 # Local History for Visual Studio Code
 .history/
 

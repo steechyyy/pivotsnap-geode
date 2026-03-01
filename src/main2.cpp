@@ -1,4 +1,4 @@
-#include <geode/Geode.hpp>
+#include <Geode/Geode.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
 
 using namespace geode::prelude;
@@ -123,7 +123,44 @@ class $modify(TheTransformControls, GJTransformControl) {
 		}
 
 	}
-	
+
+	bool snap(bool test) {
+
+		log::debug("{}", getSpriteFrameName(m_mainNode));
+
+
+		/*
+		auto self = reinterpret_cast<uintptr_t>(this);
+
+		*(short*)(self + 0x74) = 1;
+		
+
+		static uint8_t touch[0x40];
+		memset(touch, 0, sizeof(touch));
+		*(int*)(touch + 0x38) = *(int*)(self + 0x70);
+
+		GJTransformControl::ccTouchEnded(reinterpret_cast<CCTouch*>(touch), nullptr);
+		*/
+
+
+		return true;
+	}
+
+	void test() {
+		log::debug("size of m_warpSprites: {}", m_warpSprites->count());
+		snap(false);
+		for (auto v : m_fields->warpCorners) {
+			log::debug("{}", v);
+		}
+	}
+
+	virtual void ccTouchEnded(CCTouch* touch, CCEvent* event) {
+		log::debug("ccTouchEnded");
+		GJTransformControl::ccTouchEnded(touch, event);
+	}
+
+
+
 	virtual bool init() {
 		if (!this->init()) {
 			return false;
@@ -142,16 +179,4 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 		return true;
 	}
-
-	void test() {
-		log::debug("size of m_warpSprites: {}", m_warpSprites->count());
-		for (auto v : m_fields->warpCorners) {
-			log::debug("{}", v);
-		}
-	}
-
-
-
-
-
 };
