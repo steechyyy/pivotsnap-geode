@@ -1,5 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
+#include <Geode/modify/EditorUI.hpp>
 
 using namespace geode::prelude;
 
@@ -34,15 +35,33 @@ static bool contains(const std::vector<T>& vec, const T& value)
 }
 
 constexpr ccColor3B disabledClr = { 140, 90, 90  };
+constexpr ccColor3B white = { 255, 255, 255 };
+constexpr ccColor3B green = { 102, 255, 102 };
 constexpr float EPSILON = 0.001f;
 
 class $modify(TheTransformControls, GJTransformControl) {
 
 	struct Fields {
+		bool initialized = false;
+		bool draggingPoint = false;
 		CCSprite* snappedTo = nullptr;
 		std::vector<CCSprite*> warpCorners;
 		std::vector<CCSprite*> disabledWarpers;
 	};
+
+
+	/**
+	* just restores everything to original state or something idfk anymore
+	*/
+	void enableAll() {
+		if (m_fields->snappedTo) {
+			m_fields->snappedTo->setColor(white);
+		}
+		m_fields->snappedTo = nullptr;
+
+		updateDisabledWarpers();
+		updateWarpCorners();
+	}
 
 	/**
 	* updates the warpCorners vector, which contains the
@@ -69,8 +88,13 @@ class $modify(TheTransformControls, GJTransformControl) {
 	* that would cause a crash if enabled
 	*/
 	void updateDisabledWarpers() {
+		for (auto v : m_fields->disabledWarpers) {
+			v->setColor(white);
+		}
 
-		if (!m_fields->snappedTo) return;
+		m_fields->disabledWarpers.clear();
+
+		if (m_fields->snappedTo == nullptr) return;
 
 		float x = m_fields->snappedTo->getPositionX();
 		float y = m_fields->snappedTo->getPositionY();
@@ -124,12 +148,43 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 	}
 
-	bool snap(bool test) {
+	bool performSnap(bool test) {
+		if (!m_fields->initialized || !m_mainNode->isVisible()) { return false; }
+		
+		// refresh every warp corner
+		updateWarpCorners();
 
-		log::debug("{}", getSpriteFrameName(m_mainNode));
+		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+		CCRect hitbawx = pivotNode->boundingBox();
 
+		// loop through all warp sprites to see if one collides with the pivotnode
+		for (auto v : m_fields->warpCorners) {
 
-		/*
+			// If v exists, is not the pivot node, and the pivot node touches a warpcorner
+			if (v && v != pivotNode && hitbawx.intersectsRect(v->boundingBox())) {
+
+				if (test) {
+					return true;
+				}
+
+				CCPoint res = v->getParent()->convertToWorldSpace(v->getPosition());
+				pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(res));
+				m_fields->snappedTo = v;
+				m_fields->snappedTo->setColor(green);
+
+				break;
+
+			}
+		}
+
+		updateDisabledWarpers();
+		for (auto* v : m_fields->disabledWarpers) {
+			log::debug("ptr: {}", v);
+		}
+		GJTransformControl::refreshControl();
+		return true;
+
+		/* evil code
 		auto self = reinterpret_cast<uintptr_t>(this);
 
 		*(short*)(self + 0x74) = 1;
@@ -141,25 +196,15 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 		GJTransformControl::ccTouchEnded(reinterpret_cast<CCTouch*>(touch), nullptr);
 		*/
-
-
-		return true;
 	}
 
 	void test() {
 		log::debug("size of m_warpSprites: {}", m_warpSprites->count());
-		snap(false);
+		performSnap(false);
 		for (auto v : m_fields->warpCorners) {
 			log::debug("{}", v);
 		}
 	}
-
-	virtual void ccTouchEnded(CCTouch* touch, CCEvent* event) {
-		log::debug("ccTouchEnded");
-		GJTransformControl::ccTouchEnded(touch, event);
-	}
-
-
 
 	virtual bool init() {
 		if (!this->init()) {
@@ -171,12 +216,189 @@ class $modify(TheTransformControls, GJTransformControl) {
 		this->addEventListener(
 			KeybindSettingPressedEventV3(Mod::get(), "snap-keybind"),
 			[this, method](Keybind const& keybind, bool down, bool repeat, double timestamp) {
-				if (down && !repeat && method == "keybind") {
-					test();
+				if (down && !repeat) {
+					performSnap(false);
 				}
 			}
 		);
 
+		m_fields->initialized = true;
 		return true;
 	}
+
+	virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
+		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+		CCPoint pos = pivotNode->getParent()->convertToNodeSpace(touch->getLocation());
+
+		if (pivotNode->boundingBox().containsPoint(pos)) {
+			log::debug("Started dragging point..");
+			m_fields->draggingPoint = true;
+		}
+
+		/*
+			sink input when its over a disabled sprite
+		*/
+		if (m_fields->disabledWarpers.size() > 0) {
+			CCPoint worldPos = touch->getLocation();
+
+			for (CCSprite* v : m_fields->disabledWarpers) {
+				CCPoint world = v->getParent()->convertToWorldSpace(v->getPosition());
+				CCRect sink = CCRect(
+					world.x - (v->getContentWidth() * 1.1) / 2,
+					world.y - (v->getContentHeight() * 1.1) / 2,
+					v->getContentWidth() * 1.1,
+					v->getContentHeight() * 1.1
+				);
+
+				if (sink.containsPoint(worldPos)) {
+					return true; // sink
+				}
+
+			}
+		}
+
+
+		/**
+		if (performSnap(true)) {
+			m_fields->draggingPoint = true;
+		} else {
+			m_fields->draggingPoint = false;
+		}
+		*/
+		
+		return GJTransformControl::ccTouchBegan(touch, event);
+	}
+
+	virtual void ccTouchMoved(CCTouch* touch, CCEvent* event) {
+		if (m_fields->draggingPoint) {
+			log::debug("dragging!");
+
+			if (m_fields->snappedTo) {
+				m_fields->snappedTo->setColor(white);
+				m_fields->snappedTo = nullptr;
+			}
+
+			enableAll();
+		}
+
+		GJTransformControl::ccTouchMoved(touch, event);
+	}
+
+	virtual void ccTouchEnded(CCTouch* touch, CCEvent* event) {
+		log::debug("Stopped dragging point..");
+		m_fields->draggingPoint = false;
+
+		if (performSnap(true) && m_fields->snappedTo == nullptr) {
+			enableAll();
+		}
+		log::debug("ccTouchEnded");
+
+		GJTransformControl::ccTouchEnded(touch, event);
+	}
+};
+
+class $modify(TheEditorUI, EditorUI) {
+
+	struct Fields {
+		CCMenuItemSpriteExtra* snapBtn = nullptr;
+		TheTransformControls* pivotsnap = nullptr;
+	};
+
+	void enabler() {
+		if (m_fields->pivotsnap != nullptr) {
+			m_fields->pivotsnap->enableAll();
+		}
+		else {
+			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
+		}
+
+		m_fields->snapBtn->setVisible(isTransformActive());
+	}
+
+	bool isTransformActive() {
+		return m_transformControl->isVisible();
+	}
+
+	bool init(LevelEditorLayer* lel) {
+		if (!EditorUI::init(lel)) {
+			return false;
+		}
+
+		m_fields->pivotsnap = static_cast<TheTransformControls*>(m_transformControl);
+
+		NodeIDs::provideFor(this);
+
+		// setup button
+		auto method = Mod::get()->getSettingValue<std::string>("method");
+		if (method == "keybind") { return true; }
+
+		auto sprite = CCSprite::createWithSpriteFrameName("GJ_snapBtn_001.png"_spr);
+
+		auto btn = CCMenuItemSpriteExtra::create(
+			sprite,
+			this,
+			menu_selector(TheEditorUI::onBtn)
+		);
+
+
+		CCSize size = m_unlinkBtn->getContentSize();
+		float X = m_unlinkBtn->getPositionX() + (size.width / 2) + 10.f;
+
+		//playback-menu
+		if (CCNode* undoMenu = this->getChildByID("editor-buttons-menu")) {
+			log::debug("ok");
+			
+			btn->setVisible(false);
+			undoMenu->addChild(btn);
+			undoMenu->updateLayout();
+
+			m_fields->snapBtn = btn;
+		}
+
+		
+		return true;
+	}
+
+	void onBtn(CCObject* sender) {
+		if (m_fields->pivotsnap != nullptr) {
+			m_fields->pivotsnap->performSnap(false);
+		} else {
+			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
+		}
+	}
+
+	/* out of line LINED OUT BRUH 👅👅👅👅
+	void deselectObject() {
+		m_fields->pivotsnap->enableAll();
+		EditorUI::deselectObject();
+	}
+	*/
+
+	void deselectObject(GameObject* obj) {
+		enabler();
+		
+		EditorUI::deselectObject(obj);
+	}
+
+	void deselectAll() {
+		enabler();
+		
+		EditorUI::deselectAll();
+	}
+
+	void onPlaytest(CCObject* p0) {
+		enabler();
+		EditorUI::onPlaytest(p0);
+	}
+
+	void activateTransformControl(CCObject* sender) {
+		enabler();
+		EditorUI::activateTransformControl(sender);
+
+		if (m_fields->pivotsnap != nullptr) {
+			m_fields->snapBtn->setVisible(m_fields->pivotsnap->m_mainNode->isVisible());
+		}
+		
+	}
+
 };
