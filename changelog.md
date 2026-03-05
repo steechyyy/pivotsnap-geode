@@ -1,5 +1,5 @@
 # 1.1.4
-- Full rewrite
+- full rewrite
 - 2.2081
 
 # 1.1.3

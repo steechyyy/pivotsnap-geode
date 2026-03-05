@@ -23,7 +23,7 @@
 			"name": "Snap mode",
 			"description": "change the snapping behavior of the pivot point to your liking!!",
 			"type": "string",
-			"default": "keybind",
+			"default": { "win": "keybind", "mac": "keybind", "android": "button" },
 			"one-of": [ "keybind", "button" ]
 		},
 

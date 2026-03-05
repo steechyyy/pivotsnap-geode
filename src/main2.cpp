@@ -49,6 +49,10 @@ class $modify(TheTransformControls, GJTransformControl) {
 		std::vector<CCSprite*> disabledWarpers;
 	};
 
+	// obvious methinks
+	bool isEnabled() {
+		return this->isVisible();
+	}
 
 	/**
 	* just restores everything to original state or something idfk anymore
@@ -271,7 +275,6 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 	virtual void ccTouchMoved(CCTouch* touch, CCEvent* event) {
 		if (m_fields->draggingPoint) {
-			log::debug("dragging!");
 
 			if (m_fields->snappedTo) {
 				m_fields->snappedTo->setColor(white);
@@ -307,17 +310,13 @@ class $modify(TheEditorUI, EditorUI) {
 	void enabler() {
 		if (m_fields->pivotsnap != nullptr) {
 			m_fields->pivotsnap->enableAll();
+			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
 		}
 		else {
 			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
 		}
-
-		m_fields->snapBtn->setVisible(isTransformActive());
 	}
 
-	bool isTransformActive() {
-		return m_transformControl->isVisible();
-	}
 
 	bool init(LevelEditorLayer* lel) {
 		if (!EditorUI::init(lel)) {
@@ -332,7 +331,7 @@ class $modify(TheEditorUI, EditorUI) {
 		auto method = Mod::get()->getSettingValue<std::string>("method");
 		if (method == "keybind") { return true; }
 
-		auto sprite = CCSprite::createWithSpriteFrameName("GJ_snapBtn_001.png"_spr);
+		auto sprite = CCSprite::create("GJ_snapBtn_001.png"_spr);
 
 		auto btn = CCMenuItemSpriteExtra::create(
 			sprite,
@@ -375,30 +374,34 @@ class $modify(TheEditorUI, EditorUI) {
 	*/
 
 	void deselectObject(GameObject* obj) {
-		enabler();
-		
 		EditorUI::deselectObject(obj);
+		enabler();
 	}
 
 	void deselectAll() {
-		enabler();
-		
 		EditorUI::deselectAll();
+		enabler();
 	}
 
 	void onPlaytest(CCObject* p0) {
-		enabler();
 		EditorUI::onPlaytest(p0);
+		enabler();
 	}
 
 	void activateTransformControl(CCObject* sender) {
-		enabler();
 		EditorUI::activateTransformControl(sender);
+		enabler();
+	}
 
+	virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
 		if (m_fields->pivotsnap != nullptr) {
-			m_fields->snapBtn->setVisible(m_fields->pivotsnap->m_mainNode->isVisible());
+			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
 		}
-		
+		else {
+			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
+		}
+
+		return EditorUI::ccTouchBegan(touch, event);
 	}
 
 };
