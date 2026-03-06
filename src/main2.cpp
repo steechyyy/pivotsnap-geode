@@ -183,7 +183,7 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 		updateDisabledWarpers();
 		for (auto* v : m_fields->disabledWarpers) {
-			log::debug("ptr: {}", v);
+			// log::debug("ptr: {}", v);
 		}
 		GJTransformControl::refreshControl();
 		return true;
@@ -203,10 +203,10 @@ class $modify(TheTransformControls, GJTransformControl) {
 	}
 
 	void test() {
-		log::debug("size of m_warpSprites: {}", m_warpSprites->count());
+		//log::debug("size of m_warpSprites: {}", m_warpSprites->count());
 		performSnap(false);
 		for (auto v : m_fields->warpCorners) {
-			log::debug("{}", v);
+			//log::debug("{}", v);
 		}
 	}
 
@@ -235,7 +235,7 @@ class $modify(TheTransformControls, GJTransformControl) {
 		CCPoint pos = pivotNode->getParent()->convertToNodeSpace(touch->getLocation());
 
 		if (pivotNode->boundingBox().containsPoint(pos)) {
-			log::debug("Started dragging point..");
+			// log::debug("Started dragging point..");
 			m_fields->draggingPoint = true;
 		}
 
@@ -288,13 +288,13 @@ class $modify(TheTransformControls, GJTransformControl) {
 	}
 
 	virtual void ccTouchEnded(CCTouch* touch, CCEvent* event) {
-		log::debug("Stopped dragging point..");
+		//log::debug("Stopped dragging point..");
 		m_fields->draggingPoint = false;
 
 		if (performSnap(true) && m_fields->snappedTo == nullptr) {
 			enableAll();
 		}
-		log::debug("ccTouchEnded");
+		//log::debug("ccTouchEnded");
 
 		GJTransformControl::ccTouchEnded(touch, event);
 	}
@@ -331,25 +331,34 @@ class $modify(TheEditorUI, EditorUI) {
 		auto method = Mod::get()->getSettingValue<std::string>("method");
 		if (method == "keybind") { return true; }
 
-		auto sprite = CCSprite::create("GJ_snapBtn_001.png"_spr);
 
-		auto btn = CCMenuItemSpriteExtra::create(
-			sprite,
-			this,
-			menu_selector(TheEditorUI::onBtn)
-		);
 
 
 		CCSize size = m_unlinkBtn->getContentSize();
 		float X = m_unlinkBtn->getPositionX() + (size.width / 2) + 10.f;
 
 		//playback-menu
-		if (CCNode* undoMenu = this->getChildByID("editor-buttons-menu")) {
-			log::debug("ok");
-			
+		if (auto menu = this->querySelector("editor-buttons-menu")) {
+			auto sprite = CCSprite::create("GJ_snapBtn_001.png"_spr);
+			//sprite->setContentSize(ccp(20, 20));
+
+			auto btn = CCMenuItemSpriteExtra::create(
+				sprite,
+				this,
+				menu_selector(TheEditorUI::onBtn)
+			);
+			btn->setPosition(ccp(79, 30));
+			btn->setContentSize(CCSize(20, 20));
+			btn->setID("snap"_spr);
 			btn->setVisible(false);
-			undoMenu->addChild(btn);
-			undoMenu->updateLayout();
+
+			sprite->setPosition(btn->getContentSize() / 2);
+			
+			menu->addChild(btn);
+			menu->updateLayout();
+
+
+			//log::debug("ok");
 
 			m_fields->snapBtn = btn;
 		}
@@ -372,7 +381,12 @@ class $modify(TheEditorUI, EditorUI) {
 		EditorUI::deselectObject();
 	}
 	*/
-
+	
+	/*
+	
+	These functions were all used before i figured out that deactivateTransformControl() was a thing bruh.
+	
+	
 	void deselectObject(GameObject* obj) {
 		EditorUI::deselectObject(obj);
 		enabler();
@@ -388,10 +402,6 @@ class $modify(TheEditorUI, EditorUI) {
 		enabler();
 	}
 
-	void activateTransformControl(CCObject* sender) {
-		EditorUI::activateTransformControl(sender);
-		enabler();
-	}
 
 	virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
 		if (m_fields->pivotsnap != nullptr) {
@@ -402,6 +412,19 @@ class $modify(TheEditorUI, EditorUI) {
 		}
 
 		return EditorUI::ccTouchBegan(touch, event);
+	}
+	*/
+
+	void activateTransformControl(CCObject* sender) {
+		//log::debug("activate");
+		EditorUI::activateTransformControl(sender);
+		enabler();
+	}
+
+	void deactivateTransformControl() {
+		//log::debug("deactivate");
+		EditorUI::deactivateTransformControl();
+		enabler();
 	}
 
 };
