@@ -177,12 +177,13 @@ bool TheTransformControls::performSnap(bool test) {
 	// if any index mod reads this, please lmk how to avoid this #define stuff because this feels very unclean ...
 
 
+
 	// refresh every warp corner
 	updateWarpCorners();
 	
 	// this is equivalent to GJTransformControls::spriteByTag(), but im using ts instead because the inline definition
 	// isnt implemented in ios yet
-	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(1));
+	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(0));
 	CCRect hitbawx = pivotNode->boundingBox();
 
 	bool wouldsnap = false;
@@ -191,6 +192,7 @@ bool TheTransformControls::performSnap(bool test) {
 	for (auto v : m_fields->warpCorners) {
 
 		// If v exists, is not the pivot node, and the pivot node touches a warpcorner
+
 		if (v && v != pivotNode && hitbawx.intersectsRect(v->boundingBox())) {
 			wouldsnap = true;
 
@@ -260,7 +262,7 @@ $override
 bool TheTransformControls::ccTouchBegan(CCTouch* touch, CCEvent* event) {
 	// this is equivalent to GJTransformControls::spriteByTag(), but im using ts instead because the inline definition
 	// isnt implemented in ios yet..
-	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(1));
+	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(0));
 	CCPoint pos = pivotNode->getParent()->convertToNodeSpace(touch->getLocation());
 
 	if (pivotNode->boundingBox().containsPoint(pos)) {

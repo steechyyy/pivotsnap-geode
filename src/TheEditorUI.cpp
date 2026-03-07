@@ -81,6 +81,7 @@ bool TheEditorUI::init(LevelEditorLayer * lel) {
 }
 
 void TheEditorUI::onSnapBtn(CCObject * sender) {
+	log::debug("{}, {}", m_fields->pivotsnap, m_fields->firstInitialized);
 	if (m_fields->pivotsnap != nullptr && m_fields->firstInitialized) {
 		m_fields->pivotsnap->performSnap(false);
 	}
@@ -141,7 +142,7 @@ void TheEditorUI::activateTransformControl(CCObject * sender) {
 	}
 
 	if (m_fields->firstInitialized) {
-		enabler();
+		TheEditorUI::enabler();
 	}
 }
 
@@ -149,7 +150,7 @@ void TheEditorUI::deactivateTransformControl() {
 	//log::debug("deactivate");
 	EditorUI::deactivateTransformControl();
 	if (m_fields->firstInitialized) {
-		enabler();
+		TheEditorUI::enabler();
 	}
 
 }
