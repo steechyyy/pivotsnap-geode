@@ -179,8 +179,10 @@ bool TheTransformControls::performSnap(bool test) {
 
 	// refresh every warp corner
 	updateWarpCorners();
-
-	CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+	
+	// this is equivalent to GJTransformControls::spriteByTag(), but im using ts instead because the inline definition
+	// isnt implemented in ios yet
+	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(1));
 	CCRect hitbawx = pivotNode->boundingBox();
 
 	bool wouldsnap = false;
@@ -256,7 +258,9 @@ bool TheTransformControls::init() {
 
 $override
 bool TheTransformControls::ccTouchBegan(CCTouch* touch, CCEvent* event) {
-	CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
+	// this is equivalent to GJTransformControls::spriteByTag(), but im using ts instead because the inline definition
+	// isnt implemented in ios yet..
+	CCSprite* pivotNode = static_cast<cocos2d::CCSprite*>(m_warpSprites->objectAtIndex(1));
 	CCPoint pos = pivotNode->getParent()->convertToNodeSpace(touch->getLocation());
 
 	if (pivotNode->boundingBox().containsPoint(pos)) {
