@@ -81,7 +81,6 @@ bool TheEditorUI::init(LevelEditorLayer * lel) {
 }
 
 void TheEditorUI::onSnapBtn(CCObject * sender) {
-	log::debug("{}, {}", m_fields->pivotsnap, m_fields->firstInitialized);
 	if (m_fields->pivotsnap != nullptr && m_fields->firstInitialized) {
 		m_fields->pivotsnap->performSnap(false);
 	}
