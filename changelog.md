@@ -1,5 +1,6 @@
 # 1.1.4
 - full rewrite
+- button now only appears when it should
 - 2.2081
 
 # 1.1.3
