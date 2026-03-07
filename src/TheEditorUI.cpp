@@ -23,10 +23,11 @@ struct Fields {
 void TheEditorUI::enabler() {
 	if (m_fields->pivotsnap != nullptr) {
 		m_fields->pivotsnap->enableAll();
+		m_fields->transformActive = m_fields->pivotsnap->isEnabled();
 		if (auto method = Mod::get()->getSettingValue<std::string>("snap-method") == "button") {
 			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
-			m_fields->transformActive = m_fields->pivotsnap->isEnabled();
 		}
+
 	}
 	else {
 		log::warn("enabler(): HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
