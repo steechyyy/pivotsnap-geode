@@ -1,8 +1,11 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
-#include <Geode/modify/EditorUI.hpp>
+
+#include "TheEditorUI.hpp"
+#include "TheTransformControls.hpp"
 
 using namespace geode::prelude;
+
 
 static std::string getSpriteFrameName(CCNode* node) {
 	//cred to devtools
@@ -16,8 +19,7 @@ static std::string getSpriteFrameName(CCNode* node) {
 
 				for (auto [key, frame] : CCDictionaryExt<std::string, CCSpriteFrame*>(cachedFrames)) {
 					if (frame->getTexture() == texture && frame->getRect() == rect) {
-						return key.c_str();
-						break;
+						return key;
 					}
 				}
 
@@ -37,7 +39,7 @@ static bool contains(const std::vector<T>& vec, const T& value)
 constexpr ccColor3B disabledClr = { 140, 90, 90  };
 constexpr ccColor3B white = { 255, 255, 255 };
 constexpr ccColor3B green = { 102, 255, 102 };
-constexpr float EPSILON = 0.001f;
+constexpr float EPSILON = 0.005;
 
 class $modify(TheTransformControls, GJTransformControl) {
 
@@ -80,7 +82,7 @@ class $modify(TheTransformControls, GJTransformControl) {
 			}
 		}
 
-		if (m_fields->warpCorners.size() <= 0) {
+		if (m_fields->warpCorners.empty()) {
 			log::warn("updateWarpCorners(): no warp corner textures found, this should NOT happen, please report!");
 		}
 
@@ -110,7 +112,7 @@ class $modify(TheTransformControls, GJTransformControl) {
 		// loop through every warper and store aligned sprites
 		for (auto v : m_fields->warpCorners) {
 			
-			if (!contains(m_fields->disabledWarpers, v) && v != m_fields->snappedTo) {
+			if (v != m_fields->snappedTo) {
 				if (std::abs(v->getPositionX() - x) < EPSILON) {
 					xAlignedSprites.push_back(v);
 					continue;
@@ -126,12 +128,12 @@ class $modify(TheTransformControls, GJTransformControl) {
 
 		if (xAlignedSprites.size() + yAlignedSprites.size() >= 4) {
 			// it's a corner
-			m_fields->disabledWarpers = std::move(xAlignedSprites);
+			m_fields->disabledWarpers = xAlignedSprites;
 
 			m_fields->disabledWarpers.insert(
 				m_fields->disabledWarpers.end(),
-				std::make_move_iterator(yAlignedSprites.begin()),
-				std::make_move_iterator(yAlignedSprites.end())
+				yAlignedSprites.begin(),
+				yAlignedSprites.end()
 			);
 		} else {
 			// it's not a corner!
@@ -153,42 +155,57 @@ class $modify(TheTransformControls, GJTransformControl) {
 	}
 
 	bool performSnap(bool test) {
-		if (!m_fields->initialized || !m_mainNode->isVisible()) { return false; }
-		
+		if (!m_fields->initialized || !m_mainNode->isVisible()) { log::debug("HELP! attempted to snap without stuf being properly initialized, what the hell??"); return false; }
+
+		// Safety i'm playing it very safe here hi
+		auto ui = m_delegate ? m_delegate->getUI() : nullptr;
+		auto editor = typeinfo_cast<TheEditorUI*>(ui);
+
+		if (!editor) {
+			log::warn("HELP! EditorUI missing");
+			return false;
+		}
+		if (!editor->m_fields->transformActive) {
+			log::debug("HELP! attempted to snap but transform isnt active. what the hell man");
+			return false;
+		}
+
+
 		// refresh every warp corner
 		updateWarpCorners();
 
 		CCSprite* pivotNode = GJTransformControl::spriteByTag(1);
 		CCRect hitbawx = pivotNode->boundingBox();
 
+		bool wouldsnap = false;
+
 		// loop through all warp sprites to see if one collides with the pivotnode
 		for (auto v : m_fields->warpCorners) {
 
 			// If v exists, is not the pivot node, and the pivot node touches a warpcorner
 			if (v && v != pivotNode && hitbawx.intersectsRect(v->boundingBox())) {
+				wouldsnap = true;
 
-				if (test) {
-					return true;
+				if (!test) {
+					CCPoint res = v->getParent()->convertToWorldSpace(v->getPosition());
+					pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(res));
+					m_fields->snappedTo = v;
+					m_fields->snappedTo->setColor(green);
 				}
-
-				CCPoint res = v->getParent()->convertToWorldSpace(v->getPosition());
-				pivotNode->setPosition(pivotNode->getParent()->convertToNodeSpace(res));
-				m_fields->snappedTo = v;
-				m_fields->snappedTo->setColor(green);
 
 				break;
 
 			}
 		}
 
-		updateDisabledWarpers();
-		for (auto* v : m_fields->disabledWarpers) {
-			// log::debug("ptr: {}", v);
+		if (!test && wouldsnap) {
+			updateDisabledWarpers();
+			GJTransformControl::refreshControl();
 		}
-		GJTransformControl::refreshControl();
-		return true;
 
-		/* evil code
+		return wouldsnap;
+
+		/* evil code DONT DO THIS THIS IS BAD BAD BAD
 		auto self = reinterpret_cast<uintptr_t>(this);
 
 		*(short*)(self + 0x74) = 1;
@@ -211,22 +228,20 @@ class $modify(TheTransformControls, GJTransformControl) {
 	}
 
 	virtual bool init() {
-		if (!this->init()) {
+		if (!GJTransformControl::init()) {
 			return false;
 		}
 
-		auto method = Mod::get()->getSettingValue<std::string>("snap-mode");
 
 		this->addEventListener(
 			KeybindSettingPressedEventV3(Mod::get(), "snap-keybind"),
-			[this, method](Keybind const& keybind, bool down, bool repeat, double timestamp) {
+			[this](Keybind const& keybind, bool down, bool repeat, double timestamp) {
 				if (down && !repeat) {
 					performSnap(false);
 				}
 			}
 		);
 
-		m_fields->initialized = true;
 		return true;
 	}
 
@@ -300,131 +315,3 @@ class $modify(TheTransformControls, GJTransformControl) {
 	}
 };
 
-class $modify(TheEditorUI, EditorUI) {
-
-	struct Fields {
-		CCMenuItemSpriteExtra* snapBtn = nullptr;
-		TheTransformControls* pivotsnap = nullptr;
-	};
-
-	void enabler() {
-		if (m_fields->pivotsnap != nullptr) {
-			m_fields->pivotsnap->enableAll();
-			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
-		}
-		else {
-			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
-		}
-	}
-
-
-	bool init(LevelEditorLayer* lel) {
-		if (!EditorUI::init(lel)) {
-			return false;
-		}
-
-		m_fields->pivotsnap = static_cast<TheTransformControls*>(m_transformControl);
-
-		NodeIDs::provideFor(this);
-
-		// setup button
-		auto method = Mod::get()->getSettingValue<std::string>("method");
-		if (method == "keybind") { return true; }
-
-
-
-
-		CCSize size = m_unlinkBtn->getContentSize();
-		float X = m_unlinkBtn->getPositionX() + (size.width / 2) + 10.f;
-
-		//playback-menu
-		if (auto menu = this->querySelector("editor-buttons-menu")) {
-			auto sprite = CCSprite::create("GJ_snapBtn_001.png"_spr);
-			//sprite->setContentSize(ccp(20, 20));
-
-			auto btn = CCMenuItemSpriteExtra::create(
-				sprite,
-				this,
-				menu_selector(TheEditorUI::onBtn)
-			);
-			btn->setPosition(ccp(79, 30));
-			btn->setContentSize(CCSize(20, 20));
-			btn->setID("snap"_spr);
-			btn->setVisible(false);
-
-			sprite->setPosition(btn->getContentSize() / 2);
-			
-			menu->addChild(btn);
-			menu->updateLayout();
-
-
-			//log::debug("ok");
-
-			m_fields->snapBtn = btn;
-		}
-
-		
-		return true;
-	}
-
-	void onBtn(CCObject* sender) {
-		if (m_fields->pivotsnap != nullptr) {
-			m_fields->pivotsnap->performSnap(false);
-		} else {
-			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
-		}
-	}
-
-	/* out of line LINED OUT BRUH 👅👅👅👅
-	void deselectObject() {
-		m_fields->pivotsnap->enableAll();
-		EditorUI::deselectObject();
-	}
-	*/
-	
-	/*
-	
-	These functions were all used before i figured out that deactivateTransformControl() was a thing bruh.
-	
-	
-	void deselectObject(GameObject* obj) {
-		EditorUI::deselectObject(obj);
-		enabler();
-	}
-
-	void deselectAll() {
-		EditorUI::deselectAll();
-		enabler();
-	}
-
-	void onPlaytest(CCObject* p0) {
-		EditorUI::onPlaytest(p0);
-		enabler();
-	}
-
-
-	virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
-		if (m_fields->pivotsnap != nullptr) {
-			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
-		}
-		else {
-			log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
-		}
-
-		return EditorUI::ccTouchBegan(touch, event);
-	}
-	*/
-
-	void activateTransformControl(CCObject* sender) {
-		//log::debug("activate");
-		EditorUI::activateTransformControl(sender);
-		enabler();
-	}
-
-	void deactivateTransformControl() {
-		//log::debug("deactivate");
-		EditorUI::deactivateTransformControl();
-		enabler();
-	}
-
-};
