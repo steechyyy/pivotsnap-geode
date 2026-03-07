@@ -1,3 +1,6 @@
+# 1.1.5
+- fix keybind mode not working
+
 # 1.1.4
 - full rewrite
 - button now only appears when it should
