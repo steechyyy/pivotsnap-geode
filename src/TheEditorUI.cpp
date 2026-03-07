@@ -2,9 +2,11 @@
 #include <Geode/modify/EditorUI.hpp>
 
 #include "TheEditorUI.hpp"
+#include "TheTransformControls.hpp"
 
 using namespace geode::prelude;
 
+#define m_fields this->m_fields
 
 
 struct Fields {
@@ -18,7 +20,7 @@ struct Fields {
 	bool transformActive = false;
 };
 
-void enabler() {
+void TheEditorUI::enabler() {
 	if (m_fields->pivotsnap != nullptr) {
 		m_fields->pivotsnap->enableAll();
 		if (auto method = Mod::get()->getSettingValue<std::string>("snap-method") == "button") {
@@ -32,7 +34,7 @@ void enabler() {
 }
 
 
-bool init(LevelEditorLayer * lel) {
+bool TheEditorUI::init(LevelEditorLayer * lel) {
 	if (!EditorUI::init(lel)) {
 		return false;
 	}
@@ -56,7 +58,7 @@ bool init(LevelEditorLayer * lel) {
 		auto btn = CCMenuItemSpriteExtra::create(
 			sprite,
 			this,
-			menu_selector(TheEditorUI::onBtn)
+			menu_selector(TheEditorUI::onSnapBtn)
 		);
 		btn->setPosition(ccp(79, 30));
 		btn->setContentSize(CCSize(20, 20));
@@ -78,7 +80,7 @@ bool init(LevelEditorLayer * lel) {
 	return true;
 }
 
-void onBtn(CCObject * sender) {
+void TheEditorUI::onSnapBtn(CCObject * sender) {
 	if (m_fields->pivotsnap != nullptr && m_fields->firstInitialized) {
 		m_fields->pivotsnap->performSnap(false);
 	}
@@ -127,12 +129,15 @@ virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
 }
 */
 
-void activateTransformControl(CCObject * sender) {
+void TheEditorUI::activateTransformControl(CCObject * sender) {
 	//log::debug("activate");
 	EditorUI::activateTransformControl(sender);
 
 	if (m_fields->pivotsnap != nullptr) {
+		#undef m_fields
 		m_fields->pivotsnap->m_fields->initialized = true;
+		#define m_fields this->m_fields
+		// if any index mod reads this, please lmk how to avoid this #define stuff because this feels very unclean ...
 	}
 
 	if (m_fields->firstInitialized) {
@@ -140,7 +145,7 @@ void activateTransformControl(CCObject * sender) {
 	}
 }
 
-void deactivateTransformControl() {
+void TheEditorUI::deactivateTransformControl() {
 	//log::debug("deactivate");
 	EditorUI::deactivateTransformControl();
 	if (m_fields->firstInitialized) {

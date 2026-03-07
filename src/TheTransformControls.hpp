@@ -1,12 +1,13 @@
+#pragma once
+
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJTransformControl.hpp>
 
+using namespace geode::prelude;
 
-class $modify(TheTransformControls, GJTransformControl) {
-public:
-
+struct TheTransformControls : Modify<TheTransformControls, GJTransformControl> {
 	struct Fields {
-		bool initialzed;
+		bool initialized;
 		bool draggingPoint;
 
 		CCSprite* snappedTo;
@@ -26,7 +27,4 @@ public:
 	virtual void ccTouchMoved(CCTouch* touch, CCEvent* event) override;
 	virtual void ccTouchEnded(CCTouch* touch, CCEvent* event) override;
 
-private:
-	void test();
-	Fields* m_fields = new Fields();
 };
