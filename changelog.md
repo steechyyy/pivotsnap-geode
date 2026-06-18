@@ -1,3 +1,8 @@
+# 1.1.6
+- a bit more internal documentation
+- fixed button position
+- eerrmm fixed a huge lag buggg....
+
 # 1.1.5
 - fix keybind mode not working
 

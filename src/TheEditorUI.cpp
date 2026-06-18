@@ -55,7 +55,7 @@ bool TheEditorUI::init(LevelEditorLayer * lel) {
 	float X = m_unlinkBtn->getPositionX() + (size.width / 2) + 10.f;
 
 	//playback-menu
-	if (auto menu = this->querySelector("editor-buttons-menu")) {
+	if (auto menu = this->querySelector("link-menu")) {
 		auto sprite = CCSprite::create("GJ_snapBtn_001.png"_spr);
 
 		auto btn = CCMenuItemSpriteExtra::create(
@@ -63,8 +63,7 @@ bool TheEditorUI::init(LevelEditorLayer * lel) {
 			this,
 			menu_selector(TheEditorUI::onSnapBtn)
 		);
-		btn->setPosition(ccp(79, 30));
-		btn->setContentSize(CCSize(20, 20));
+		btn->setPosition(menu->querySelector("unlink-button")->getPosition() + ccp(34, -1));
 		btn->setID("snap"_spr);
 		btn->setVisible(false);
 
