@@ -8,8 +8,10 @@
 
 using namespace geode::prelude;
 
+// It's a bit annoying having to write "this->" all the time
 #define m_fields this->m_fields
 
+/* Evil code thx alpha
 static std::string getSpriteFrameName(CCNode* node) {
 	//cred to devtools
 
@@ -32,6 +34,7 @@ static std::string getSpriteFrameName(CCNode* node) {
 
 	return "";
 }
+*/
 
 template <typename T>
 static bool contains(const std::vector<T>& vec, const T& value)
@@ -50,7 +53,7 @@ struct Fields {
 	bool initialized = false;
 	bool draggingPoint = false;
 	CCSprite* snappedTo = nullptr;
-	std::vector<CCSprite*> warpCorners;
+	std::vector<CCSprite*> warpers;
 	std::vector<CCSprite*> disabledWarpers;
 };
 
@@ -69,31 +72,33 @@ void TheTransformControls::enableAll() {
 	m_fields->snappedTo = nullptr;
 
 	updateDisabledWarpers();
-	updateWarpCorners();
+	updateWarpers();
 }
 
 /**
-* updates the warpCorners vector, which contains the
-* sprites that actually warp the object
+* this updates the "warpers" vector, which includes every warp sprite
 */
-void TheTransformControls::updateWarpCorners() {
-	m_fields->warpCorners.clear();
+void TheTransformControls::updateWarpers() {
+	m_fields->warpers.clear();
 
 	for (auto v : CCArrayExt<CCSprite*>(m_warpSprites)) {
-		if (getSpriteFrameName(v) == "warpBtn_02_001.png") {
-			m_fields->warpCorners.push_back(v);
+		int t = v->getTag();
+
+		if (t >= 2 && t <= 9) {
+			m_fields->warpers.push_back(v);
 		}
+
 	}
 
-	if (m_fields->warpCorners.empty()) {
-		log::warn("updateWarpCorners(): no warp corner textures found, this should NOT happen, please report!");
+	if (m_fields->warpers.size() <= 0) {
+		log::warn("updateWarpers(): no warp corner textures found, this should NOT happen, please report!");
 	}
 
-	m_fields->warpCorners.shrink_to_fit();
+	m_fields->warpers.shrink_to_fit();
 }
 
 /**
-* loops through m_fields->warpCorners and disables warpers
+* loops through m_fields->warpers and disables warpers
 * that would cause a crash if enabled
 */
 void TheTransformControls::updateDisabledWarpers() {
@@ -113,7 +118,7 @@ void TheTransformControls::updateDisabledWarpers() {
 	std::vector<CCSprite*> yAlignedSprites;
 
 	// loop through every warper and store aligned sprites
-	for (auto v : m_fields->warpCorners) {
+	for (auto v : m_fields->warpers) {
 		
 		if (v != m_fields->snappedTo) {
 			if (std::abs(v->getPositionX() - x) < EPSILON) {
@@ -179,7 +184,7 @@ bool TheTransformControls::performSnap(bool test) {
 
 
 	// refresh every warp corner
-	updateWarpCorners();
+	updateWarpers();
 	
 	// this is equivalent to GJTransformControls::spriteByTag(), but im using ts instead because the inline definition
 	// isnt implemented in ios yet
@@ -189,9 +194,9 @@ bool TheTransformControls::performSnap(bool test) {
 	bool wouldsnap = false;
 
 	// loop through all warp sprites to see if one collides with the pivotnode
-	for (auto v : m_fields->warpCorners) {
+	for (auto v : m_fields->warpers) {
 
-		// If v exists, is not the pivot node, and the pivot node touches a warpcorner
+		// If v exists, is not the pivot node, and the pivot node touches a warper
 
 		if (v && v != pivotNode && hitbawx.intersectsRect(v->boundingBox())) {
 			wouldsnap = true;
@@ -215,7 +220,7 @@ bool TheTransformControls::performSnap(bool test) {
 
 	return wouldsnap;
 
-	/* evil code DONT DO THIS THIS IS BAD BAD BAD
+	/* evil code DONT DO THIS THIS IS BAD BAD BAD OHHHM MY GOD ITS SO EVIL
 	auto self = reinterpret_cast<uintptr_t>(this);
 
 	*(short*)(self + 0x74) = 1;
@@ -233,7 +238,7 @@ bool TheTransformControls::performSnap(bool test) {
 void test() {
 	//log::debug("size of m_warpSprites: {}", m_warpSprites->count());
 	TheTransformControls::performSnap(false);
-	for (auto v : m_fields->warpCorners) {
+	for (auto v : m_fields->warpers) {
 		//log::debug("{}", v);
 	}
 }

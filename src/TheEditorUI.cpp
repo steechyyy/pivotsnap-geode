@@ -4,6 +4,8 @@
 #include "TheEditorUI.hpp"
 #include "TheTransformControls.hpp"
 
+// Guys is this a camellia reference
+
 using namespace geode::prelude;
 
 #define m_fields this->m_fields
@@ -14,7 +16,7 @@ struct Fields {
 	TheTransformControls* pivotsnap = nullptr;
 
 	// the reason this value exists is BECAUSE editorui::init calls deactivateTransformControls before pivotsnap is even initialized in the fields,
-	// as such, enabler() prints a warning into the log which i only want happening if something truly goes wrong...
+	// cause of this, enabler() printed a warning into the log which i only want happening if something truly goes wrong...
 	bool firstInitialized = false;
 
 	bool transformActive = false;
@@ -22,16 +24,16 @@ struct Fields {
 
 void TheEditorUI::enabler() {
 	if (m_fields->pivotsnap != nullptr) {
+
 		m_fields->pivotsnap->enableAll();
 		m_fields->transformActive = m_fields->pivotsnap->isEnabled();
+
 		if (auto method = Mod::get()->getSettingValue<std::string>("snap-method") == "button") {
 			m_fields->snapBtn->setVisible(m_fields->pivotsnap->isEnabled());
 		}
 
 	}
-	else {
-		log::warn("enabler(): HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
-	}
+	else { log::warn("TheEditorUI::enabler(): HELP!! Something went wrong when getting the transformcontrols class! Report this!!"); }
 }
 
 
@@ -77,7 +79,6 @@ bool TheEditorUI::init(LevelEditorLayer * lel) {
 		m_fields->snapBtn = btn;
 	}
 
-
 	return true;
 }
 
@@ -85,9 +86,7 @@ void TheEditorUI::onSnapBtn(CCObject * sender) {
 	if (m_fields->pivotsnap != nullptr && m_fields->firstInitialized) {
 		m_fields->pivotsnap->performSnap(false);
 	}
-	else {
-		log::warn("HELP!! Something went wrong when getting the transformcontrols class! Report this!!");
-	}
+	else { log::warn("TheEditorUI::onSnapBtn(): HELP!! Something went reeaaally wrong when getting the transformcontrols class! Report this!!"); }
 }
 
 /* out of line LINED OUT BRUH 👅👅👅👅
@@ -131,7 +130,7 @@ virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
 */
 
 void TheEditorUI::activateTransformControl(CCObject * sender) {
-	//log::debug("activate");
+	
 	EditorUI::activateTransformControl(sender);
 
 	if (m_fields->pivotsnap != nullptr) {
@@ -141,16 +140,12 @@ void TheEditorUI::activateTransformControl(CCObject * sender) {
 		// if any index mod reads this, please lmk how to avoid this #define stuff because this feels very unclean ...
 	}
 
-	if (m_fields->firstInitialized) {
-		TheEditorUI::enabler();
-	}
+	if (m_fields->firstInitialized) { TheEditorUI::enabler(); }
 }
 
 void TheEditorUI::deactivateTransformControl() {
-	//log::debug("deactivate");
+	
 	EditorUI::deactivateTransformControl();
-	if (m_fields->firstInitialized) {
-		TheEditorUI::enabler();
-	}
+	if (m_fields->firstInitialized) {TheEditorUI::enabler(); }
 
 }

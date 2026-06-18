@@ -17,6 +17,7 @@ public:
 		bool transformActive = false;
 	};
 
+	// just restores everything to original state
 	void enabler();
 
 	$override
